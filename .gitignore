@@ -1,0 +1,5 @@
+output/
+venv/
+data/
+models/
+.DS_Store
