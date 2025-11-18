@@ -115,21 +115,6 @@ def assign_document_topics(
 
 def indifference(texts: list[str]) -> Any:
     print("Running indifference tests...")
-    # ‘indifference’ towards food, which is tested via sentiment analysis to see if most articles about food in the Netherlands are sentiment-neutral;
-    # Model options:
-    # Trained on patient care reports: https://arno.uvt.nl/show.cgi?fid=161158
-    # pattern.nl, although it was also trained on news: https://digiasset.org/html/pattern-nl.html
-    # https://huggingface.co/ymcnabb/dutch_threeway_sentiment_classification_v2?text=I+like+you.+I+love+you
-    # https://huggingface.co/wietsedv/bert-base-dutch-cased-finetuned-sentiment?text=I+like+you.+I+love+you
-    # Alternatively: translate texts to English and then run sentiment analysis on them.
-    #  https://arxiv.org/html/2405.02887v2 shows that this almost doesn't hinder performance at all, especially for (in their case) German->English, which is quite close to Dutch-English.
-    # ChatGPT says "use Helsinki-NLP/opus-mt-nl-en or DeepL API for higher quality if needed"
-
-    # English-language model options:
-    # - cardiffnlp/twitter-roberta-base-sentiment (3-way: pos/neu/neg) – good at detecting neutrality
-    # - distilbert-base-uncased-finetuned-sst-2-english (2-way, positive/negative) – simpler, fast
-    # - microsoft/deberta-v3-base-sst2 – state-of-the-art, robust on subtle sentiment
-
     sentiment_results = analyze_sentiments(texts)
 
     return sentiment_results
