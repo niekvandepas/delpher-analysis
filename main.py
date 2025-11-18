@@ -28,35 +28,37 @@ SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH = f"{SCRIPT_DIR}/data/search_results_w
 
 
 def main() -> None:
-    # print("Importing data...")
-    # search_results = time_function(import_search_results, SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH)
+    print("Importing data...")
+    search_results = time_function(import_search_results, SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH)
 
-    # with open(SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH, "r") as f:
-    #     data = json.load(f)
-    #     search_results_with_plain_texts = [PlainTextSearchResult(**d) for d in data]
+    with open(SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH, "r") as f:
+        data = json.load(f)
+        search_results_with_plain_texts = [PlainTextSearchResult(**d) for d in data]
 
-    # translated_search_results: list[TranslatedSearchResult] = translate_texts(search_results_with_plain_texts)
+    translated_search_results: list[TranslatedSearchResult] = translate_texts(search_results_with_plain_texts)
 
-    # with open(f"{SCRIPT_DIR}/search_results_with_translations.json", "w") as f:
-    #     json.dump(translated_search_results, f)
+    with open(f"{SCRIPT_DIR}/search_results_with_translations.json", "w") as f:
+        json.dump(translated_search_results, f)
 
     with open(PLAIN_TEXTS_FILE_PATH, "r") as f:
         plain_texts: list[str] = json.load(f)
 
     # Make list of tuples (length, text)
-    # length_text_tuples = [(len(text), text) for text in plain_texts]
+    length_text_tuples = [(len(text), text) for text in plain_texts]
 
     # Sort by length
-    # length_text_tuples.sort(key=lambda x: x[0])
+    length_text_tuples.sort(key=lambda x: x[0])
 
     one_big_string = " ".join(plain_texts)
 
     word_proportions = count_non_dutch_words(one_big_string)
 
-    # translated_texts = translate_texts(plain_texts)
+    print(word_proportions)
+
+    translated_texts = translate_texts(search_results_with_plain_texts)
     # write translated texts to JSON
-    # with open(TRANSLATED_TEXTS_FILE_PATH, "w") as f:
-    #     json.dump(translated_texts, f)
+    with open(TRANSLATED_TEXTS_FILE_PATH, "w") as f:
+        json.dump(translated_texts, f)
 
     # Read translated texts from JSON
     # with open(TRANSLATED_TEXTS_FILE_PATH, "r") as f:
@@ -66,24 +68,25 @@ def main() -> None:
     # print("Assigning document topics...")
     topics = assign_document_topics(search_results)
 
-    # indifference_results = indifference(translated_texts)
-    # print_results(indifference_results)
-    # positive_results = [r for r in indifference_results if r["label"] == "positive"]
-    # neutral_results =  [r for r in indifference_results if r["label"] == "neutral"]
-    # negative_results = [r for r in indifference_results if r["label"] == "negative"]
+    indifference_results = indifference(translated_texts)
+    print(indifference_results)
+    positive_results = [r for r in indifference_results if r["label"] == "positive"]
+    neutral_results =  [r for r in indifference_results if r["label"] == "neutral"]
+    negative_results = [r for r in indifference_results if r["label"] == "negative"]
 
-    # technocratic_results = technocratism(translated_texts[:1000])
-    # print_results(technocratic_results)
+    technocratic_results = technocratism(translated_texts[:1000])
 
-    # regional_dishes_most_similar_fasttext = semantic_search(
-    #     plain_texts, query_words=REGIONAL_DISHES_LIST, model="fasttext"
-    # )
-    # print(regional_dishes_most_similar_fasttext)
+    print(technocratic_results)
 
-    # regional_dishes_most_similar_sentence_transformers = semantic_search(
-    #     plain_texts, query_words=REGIONAL_DISHES_LIST, model="sentence-transformers"
-    # )
-    # print(regional_dishes_most_similar_sentence_transformers)
+    regional_dishes_most_similar_fasttext = semantic_search(
+        plain_texts, query_words=REGIONAL_DISHES_LIST, model="fasttext"
+    )
+    print(regional_dishes_most_similar_fasttext)
+
+    regional_dishes_most_similar_sentence_transformers = semantic_search(
+        plain_texts, query_words=REGIONAL_DISHES_LIST, model="sentence-transformers"
+    )
+    print(regional_dishes_most_similar_sentence_transformers)
 
     indo_authenticity_results = indo_authenticity(plain_texts, embedding_model=EmbeddingModel.FASTTEXT)
     print(indo_authenticity_results)
@@ -97,6 +100,7 @@ def main() -> None:
     indo_authenticity_results = indo_authenticity(plain_texts, embedding_model=EmbeddingModel.WORD2VEC)
     print(indo_authenticity_results)
     results_dict = asdict(indo_authenticity_results)
+
     # Convert the DataFrame to a dict
     results_dict["co_occurence"] = results_dict["co_occurence"].to_dict()
 
@@ -113,14 +117,14 @@ def assign_document_topics(
     return topics
 
 
-def indifference(texts: list[str]) -> Any:
+def indifference(texts: list[TranslatedSearchResult]) -> Any:
     print("Running indifference tests...")
     sentiment_results = analyze_sentiments(texts)
 
     return sentiment_results
 
 
-def technocratism(english_texts: list[str]) -> list[dict]:
+def technocratism(english_texts: list[TranslatedSearchResult]) -> list[dict]:
     print("Running technocratism tests...")
     # technocratic tendencies, which is explored through topic modeling or classification to test if most articles focus on sustainability, health, and economics;
 

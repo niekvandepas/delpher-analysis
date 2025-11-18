@@ -3,6 +3,8 @@ from sklearn.pipeline import Pipeline  # type: ignore
 from transformers import TranslationPipeline, pipeline  # type: ignore
 from typing import Optional
 
+from delpher_types import TranslatedSearchResult
+
 
 class SentimentResult(TypedDict):
     text: str
@@ -10,7 +12,7 @@ class SentimentResult(TypedDict):
     score: float
 
 
-def analyze_sentiments(texts: list[str]) -> list[SentimentResult]:
+def analyze_sentiments(texts: list[TranslatedSearchResult]) -> list[SentimentResult]:
     # English-language model
     pipe = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
 
@@ -35,7 +37,7 @@ def analyze_sentiments(texts: list[str]) -> list[SentimentResult]:
 
 def sentiment_analysis(
     analysis_pipeline: Pipeline,
-    texts: list[str],
+    texts: list[TranslatedSearchResult],
     max_text_length: int = 10000,
     model_max_length: int = 512,
 ) -> list[SentimentResult]:
@@ -48,8 +50,9 @@ def sentiment_analysis(
     results: list[SentimentResult] = []
     skipped_counter = 0
 
-    for i, text in enumerate(texts, start=1):
+    for i, search_result in enumerate(texts, start=1):
         print(f"Analyzing text #{i}, skipped: {skipped_counter}", end="\r")
+        text = search_result.english_translated_text
 
         # Optional coarse-grained character-length filter
         if len(text) > max_text_length:

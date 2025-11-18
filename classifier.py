@@ -2,7 +2,9 @@
 
 import json
 from pathlib import Path
-from transformers import pipeline  # type: ignore
+from transformers import pipeline
+
+from delpher_types import TranslatedSearchResult  # type: ignore
 
 classifier = pipeline(
     "zero-shot-classification",
@@ -12,12 +14,13 @@ classifier = pipeline(
 
 candidate_labels = ["sustainability", "health", "economics"]
 
-def classify_articles(english_texts: list[str]) -> list[dict]:
+def classify_articles(english_texts: list[TranslatedSearchResult]) -> list[dict]:
     results = []
+    # https://huggingface.co/typeform/distilbert-base-uncased-mnli/blame/b91e7a74c63c287d22a105a9f050cd26d648879f/config.json
+    max_tokens = 512
 
-    for i, text in enumerate(english_texts):
-      # https://huggingface.co/typeform/distilbert-base-uncased-mnli/blame/b91e7a74c63c287d22a105a9f050cd26d648879f/config.json
-      max_tokens = 512
+    for i, search_result in enumerate(english_texts):
+      text = search_result.english_translated_text
 
       truncated_text = " ".join(text.split()[:max_tokens])
       classification = classifier(truncated_text, candidate_labels)
