@@ -67,6 +67,7 @@ def main() -> None:
 
     # print("Assigning document topics...")
     topics = assign_document_topics(search_results)
+    print(topics)
 
     indifference_results = indifference(translated_texts)
     print(indifference_results)
