@@ -28,11 +28,6 @@ SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH = f"{SCRIPT_DIR}/data/search_results_w
 
 
 def main() -> None:
-    # hypotheses:
-    # lack of attention to regional dishes;
-    # patterns of racialization;
-    # and questions of authenticity and exceptionalism.
-
     # print("Importing data...")
     # search_results = time_function(import_search_results, SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH)
 
