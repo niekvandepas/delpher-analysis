@@ -1,6 +1,13 @@
 output/
 venv/
-data/
+
+# The '*' is required in order to _in_clude data/search_keywords.txt, since ignoring 'data/' would completely ignore the whole folder.
+data/*
+!data/search_keywords.txt
+
 models/
 .DS_Store
 __pycache__
+.env
+
+.vscode
