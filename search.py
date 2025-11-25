@@ -5,7 +5,6 @@ from datetime import datetime
 import xml.etree.ElementTree as ET
 import os
 import json
-from pathlib import Path
 import time
 
 from delpher_types import SearchQuery, SearchResult
