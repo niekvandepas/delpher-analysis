@@ -228,7 +228,6 @@ def main():
         search_query, total_search_results, offset_file
     )
 
-    # {search_query.start_date}_{search_query.end_date}_offset.txt")
     search_results_file_name = Path(
         f"search_results/{search_query.search_text}_{search_query.start_date}_{search_query.end_date}_search_results.ndjson"
     )
