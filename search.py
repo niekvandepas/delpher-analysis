@@ -1,11 +1,12 @@
-import sys
-from pathlib import Path
-import requests
-from datetime import datetime
-import xml.etree.ElementTree as ET
-import os
 import json
+import os
+import sys
 import time
+import xml.etree.ElementTree as ET
+from datetime import datetime
+from pathlib import Path
+
+import requests
 
 from delpher_types import SearchQuery, SearchResult
 
@@ -33,7 +34,7 @@ def build_query_params(search_query: SearchQuery) -> dict[str, str]:
         start_date = sq.start_date
         end_date = sq.end_date
 
-        date_range_text = f'(date within "{start_date} ' f'{end_date}")'
+        date_range_text = f'(date within "{start_date} {end_date}")'
         return f"{search_term} AND {date_range_text}"
 
     search_query_params = {
@@ -219,14 +220,18 @@ def main():
     # print("Exiting without fetching documents.")
     # sys.exit(0)
 
-    offset_file = Path(f"offsets/{search_query.search_text}_{search_query.start_date}_{search_query.end_date}_offset.txt")
+    offset_file = Path(
+        f"offsets/{search_query.search_text}_{search_query.start_date}_{search_query.end_date}_offset.txt"
+    )
 
     results_stream = fetch_paginated_search_results_stream(
         search_query, total_search_results, offset_file
     )
 
     # {search_query.start_date}_{search_query.end_date}_offset.txt")
-    search_results_file_name = Path(f"search_results/{search_query.search_text}_{search_query.start_date}_{search_query.end_date}_search_results.ndjson")
+    search_results_file_name = Path(
+        f"search_results/{search_query.search_text}_{search_query.start_date}_{search_query.end_date}_search_results.ndjson"
+    )
     write_results_stream(results_stream, output_file=search_results_file_name)
 
 
