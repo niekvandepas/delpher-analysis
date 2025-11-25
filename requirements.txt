@@ -1,7 +1,7 @@
 bertopic==0.16.3
 ftfy==6.3.1
 gensim==4.3.2
-numpy==2.3.5
+numpy==1.26.4
 pandas==2.3.3
 Requests==2.32.5
 scikit_learn==1.4.2
