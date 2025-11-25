@@ -143,6 +143,7 @@ def fetch_paginated_search_results_stream(
             raise e
         for result in next_results:
             yield result
+
         # Save offset after each batch
         offset_file.write_text(str(offset))
         offset += search_query.maximum_records
