@@ -209,6 +209,7 @@ def main():
     total_search_results = extract_total_search_results(root)
     print(f"Total search results: {total_search_results}")
     if total_search_results < 1:
+        print("No search results found. Exiting.")
         sys.exit(0)
 
     # print(f"Continue fetching {total_search_results} docs? [Y/n]")
