@@ -131,6 +131,10 @@ def data_dir_to_single_json_file(data_dir: str, out_file_path: str) -> None:
     progress = 0
 
     for path in absolute_paths:
+        # Skip metadata files on macOS
+        if path.startswith("._"):
+            continue
+
         with open(path, "r", encoding="utf-8") as f:
             try:
                 search_result = json.load(f)
