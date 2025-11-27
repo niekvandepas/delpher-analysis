@@ -6,6 +6,8 @@ data/*
 !data/search_keywords.txt
 
 models/
+offsets/
+
 .DS_Store
 __pycache__
 .env
