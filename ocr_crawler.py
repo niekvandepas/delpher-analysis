@@ -9,15 +9,14 @@ from delpher_types import OcredSearchResult, SearchQuery, SearchResult
 BASE_URL = "https://jsru.kb.nl/sru/sru"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SEARCH_QUERY_USED = SearchQuery(
-    search_text="eten",
-    # start_date="1940-01-01",
+    search_text="keywords_query",
     start_date="2000-01-01",
-    # end_date="1945-12-31",
     end_date="2026-01-01",
     maximum_records=10,
     start_record=1,
     collection="DDD_artikel",
 )
+
 JSON_FILE_PATH = Path(
     f"search_results/{SEARCH_QUERY_USED.search_text}_{SEARCH_QUERY_USED.start_date}_{SEARCH_QUERY_USED.end_date}_search_results.ndjson"
 )
@@ -109,5 +108,5 @@ if __name__ == "__main__":
     fetch_and_save_result_texts(
         search_results,
         data_dir_name=SEARCH_QUERY_USED.search_text,
-        timeout_between_requests=0.1,
+        timeout_between_requests=0,
     )

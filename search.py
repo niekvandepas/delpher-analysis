@@ -28,6 +28,18 @@ def fetch_search_results(search_query: SearchQuery) -> bytes:
     return response.content
 
 
+def build_boolean_query(food_terms: list[str], identity_terms: list[str]) -> str:
+    """
+    Constructs a CQL query string: (food1 OR food2) AND (id1 OR id2)
+    """
+    # Join terms with OR
+    food_group = " OR ".join(f'"{t}"' for t in food_terms)
+    identity_group = " OR ".join(f'"{t}"' for t in identity_terms)
+
+    # Wrap in parentheses
+    return f"({food_group}) AND ({identity_group})"
+
+
 def build_query_params(search_query: SearchQuery) -> dict[str, str]:
     def build_search_query_text(sq: SearchQuery) -> str:
         search_term = sq.search_text
@@ -147,7 +159,7 @@ def fetch_paginated_search_results_stream(
         # Save offset after each batch
         offset_file.write_text(str(offset))
         offset += search_query.maximum_records
-        time.sleep(5)
+        # time.sleep(5)
 
 
 def write_results_stream(search_results_iter, output_file: Path):
@@ -183,10 +195,79 @@ def write_to_json_file(search_results):
 
 
 def main():
-    query_text = "eten"
+    # TODO mkdirs for project (offsets, models, data, search_results) so other people can run my code
+
+    # TODO Wat ik zou kunnen doen is specifieker 'keywords' opstellen per 'hypothese', oftewel, voor de hypothese "technocratisch", een lijst van keywords die daarmee te maken heeft -> dan een dataset opstellen specifiek voor die vraag.
+
+    food_keywords = [
+        "recept",
+        "eten",
+        "nootmuskaat",
+        "rijsttafel",
+        "toko",
+        "keuken",
+        "kost",
+        "maaltijd",
+        "spijs",
+        "recept",
+        "recepten",
+        "nootmuskaat",
+        "café",
+        "restaurant",
+        "toko",
+        "eten",
+        "specerijen",
+        "ingrediënten",
+        "kruiden",
+        "voedsel",
+        "keuken",
+        "culinair",
+        "koken",
+        "kok",
+        "snackbar",
+        "stamppot",
+        "diner",
+        "avondeten",
+    ]
+
+    thematic_keywords = [
+        "hollandsheid",
+        "nederlandsheid",
+        "calvinisme",
+        "kolonie",
+        "authentiek",
+        "indisch",
+        "erfgoed",
+        "exotisch",
+        "nonchalance",
+        "kolonisatie",
+        "erfgoed",
+        "identiteit",
+        "indonesië",
+        "indonesisch",
+        "oosters",
+        "nationaal",
+        "nederlands",
+        "nederland",
+        "nederlandsheid",
+        "nederlanderschap",
+        "duurzaamheid",
+        "eco",
+        "ecologisch",
+        "technologie",
+        "vooruitgang",
+        "cultureel",
+        "cultuur",
+        "culturen",
+        "nationalisme",
+        "nationaal",
+    ]
+
+    keywords_query_text = build_boolean_query(food_keywords, thematic_keywords)
+    print("Constructed Query:", keywords_query_text)
 
     search_query = SearchQuery(
-        search_text=query_text,
+        search_text=keywords_query_text,
         # start_date="1940-01-01",
         start_date="2000-01-01",
         # end_date="1945-12-31",
@@ -221,8 +302,9 @@ def main():
     # print("Exiting without fetching documents.")
     # sys.exit(0)
 
+    # Keep track of the offset so we can stop and resume this script at will without starting over
     offset_file = Path(
-        f"offsets/{search_query.search_text}_{search_query.start_date}_{search_query.end_date}_offset.txt"
+        f"offsets/keywords_query_{search_query.start_date}_{search_query.end_date}_offset.txt"
     )
 
     results_stream = fetch_paginated_search_results_stream(
@@ -230,7 +312,7 @@ def main():
     )
 
     search_results_file_name = Path(
-        f"search_results/{search_query.search_text}_{search_query.start_date}_{search_query.end_date}_search_results.ndjson"
+        f"search_results/keywords_query_{search_query.start_date}_{search_query.end_date}_search_results.ndjson"
     )
     write_results_stream(results_stream, output_file=search_results_file_name)
 
