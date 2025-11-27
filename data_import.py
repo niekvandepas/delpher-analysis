@@ -1,5 +1,7 @@
+from dataclasses import asdict
 import html
 import json
+import os
 import re
 import unicodedata
 from pathlib import Path
@@ -115,3 +117,37 @@ def count_non_dutch_words(input_str: str) -> dict[str, int]:
         "non_words": found_non_words,
     }
 
+
+def data_dir_to_single_json_file(data_dir: str, out_file_path: str) -> None:
+    absolute_paths: list[str] = []
+
+    for root, dirs, files in os.walk(data_dir):
+        for file in files:
+            absolute_paths.append(os.path.join(root, file))
+
+    search_results = []
+    total_files = len(absolute_paths)
+    errors = 0
+    progress = 0
+
+    for path in absolute_paths:
+        with open(path, "r", encoding="utf-8") as f:
+            try:
+                search_result = json.load(f)
+            except UnicodeDecodeError:
+                print(f"Error decoding file: {path}")
+                errors += 1
+            progress += 1
+            print(
+                f"Processing file {progress}/{total_files}. Errors so far: {errors}.",
+                end="\r",
+            )
+
+        search_results.append(OcredSearchResult(**search_result))
+
+    results = [json.dumps(asdict(search_result)) for search_result in search_results]
+    # As .ndjson
+    out_value = "\n".join(results)
+
+    with open(out_file_path, "w", encoding="utf-8") as out_file:
+        out_file.write(out_value)

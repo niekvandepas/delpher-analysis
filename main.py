@@ -15,6 +15,7 @@ from constants import (
     TRANSLATED_TEXTS_FILE_PATH,
     SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH,
 )
+from data_import import data_dir_to_single_json_file, strip_xml_tags
 from delpher_types import (
     EmbeddingModel,
     IndoAuthenticityResults,
