@@ -8,8 +8,13 @@ from typing import Any
 
 from classifier import classify_articles
 from co_occurence import document_co_occurence
-from constants import REGIONAL_DISHES_LIST
-from data_import import strip_xml_tags
+from constants import (
+    PLAIN_TEXTS_FILE_PATH,
+    PROJECT_DIR,
+    REGIONAL_DISHES_LIST,
+    TRANSLATED_TEXTS_FILE_PATH,
+    SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH,
+)
 from delpher_types import (
     EmbeddingModel,
     IndoAuthenticityResults,
@@ -27,13 +32,6 @@ from sentiment_analysis import analyze_sentiments
 from topic_modelling import run_bertopic
 from utils import time_function
 
-SCRIPT_DIR = os.path.dirname(__file__)
-PLAIN_TEXTS_FILE_PATH = f"{SCRIPT_DIR}/data/plain_texts.json"
-TRANSLATED_TEXTS_FILE_PATH = f"{SCRIPT_DIR}/data/translated_texts.json"
-SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH = (
-    f"{SCRIPT_DIR}/data/search_results_with_plain_texts.json"
-)
-
 
 def main() -> None:
     # print("Importing data...")
@@ -45,7 +43,7 @@ def main() -> None:
 
     # translated_search_results: list[TranslatedSearchResult] = translate_texts(search_results_with_plain_texts)
 
-    # with open(f"{SCRIPT_DIR}/search_results_with_translations.json", "w") as f:
+    # with open(f"{PROJECT_DIR}/search_results_with_translations.json", "w") as f:
     #     json.dump(translated_search_results, f)
 
     with open(PLAIN_TEXTS_FILE_PATH, "r") as f:
@@ -97,7 +95,7 @@ def main() -> None:
     )
     print(regional_dishes_most_similar_word2vec)
     with open(
-        f"{SCRIPT_DIR}/data/regional_dishes_most_similar_word2vec.json", "w"
+        f"{PROJECT_DIR}/data/regional_dishes_most_similar_word2vec.json", "w"
     ) as f:
         json.dump(
             regional_dishes_most_similar_word2vec, f, ensure_ascii=False, indent=2
@@ -116,7 +114,7 @@ def main() -> None:
     # Convert the DataFrame to a dict
     results_dict["co_occurence"] = results_dict["co_occurence"].to_dict()
 
-    with open(f"{SCRIPT_DIR}/indo_authenticity_fasttext.json", "w") as f:
+    with open(f"{PROJECT_DIR}/indo_authenticity_fasttext.json", "w") as f:
         json.dump(results_dict, f, ensure_ascii=False, indent=2)
 
     indo_authenticity_results = indo_authenticity(
@@ -128,7 +126,7 @@ def main() -> None:
     # Convert the DataFrame to a dict
     results_dict["co_occurence"] = results_dict["co_occurence"].to_dict()
 
-    with open(f"{SCRIPT_DIR}/indo_authenticity_word2vec.json", "w") as f:
+    with open(f"{PROJECT_DIR}/indo_authenticity_word2vec.json", "w") as f:
         json.dump(results_dict, f, ensure_ascii=False, indent=2)
 
 

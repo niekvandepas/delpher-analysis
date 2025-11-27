@@ -26,6 +26,11 @@ REGIONAL_DISHES_LIST = [
 import os
 
 PROJECT_DIR = f"{os.path.dirname(__file__)}"
+PLAIN_TEXTS_FILE_PATH = f"{PROJECT_DIR}/data/plain_texts.json"
+TRANSLATED_TEXTS_FILE_PATH = f"{PROJECT_DIR}/data/translated_texts.json"
+SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH = (
+    f"{PROJECT_DIR}/data/search_results_with_plain_texts.json"
+)
 
 DUTCH_WORDS_FILE_PATH = f"{PROJECT_DIR}/data/dutch_words.txt"
 ENGLISH_WORDS_FILE_PATH = f"{PROJECT_DIR}/data/english_words.txt"
