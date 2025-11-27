@@ -8,6 +8,7 @@ from constants import DUTCH_WORDS_FILE_PATH, ENGLISH_WORDS_FILE_PATH
 from delpher_types import OcredSearchResult
 from ftfy import fix_text
 
+
 def normalize_unicode(text: str) -> str:
     # Decode HTML entities (&gt; -> >, etc.)
     unescaped = html.unescape(text)
@@ -19,6 +20,7 @@ def normalize_unicode(text: str) -> str:
     normalized = unicodedata.normalize("NFKC", fixed)
 
     return normalized
+
 
 def import_search_results(
     path: str, limit: int | None = None
@@ -59,6 +61,7 @@ def import_plain_texts(dir: str) -> list[str]:
 
     return texts
 
+
 def count_non_dutch_words(input_str: str) -> dict[str, int]:
     """Count non-Dutch words in the given string.
 
@@ -68,16 +71,8 @@ def count_non_dutch_words(input_str: str) -> dict[str, int]:
     Returns:
       A dictionary containing the number of Dutch words in the string, the number of English words in the string, the number of unknown words in the string, and the number of non-words in the string (e.g. punctuation-only or numeric words).
     """
-    known_dutch_words = (
-        open(DUTCH_WORDS_FILE_PATH)
-        .read()
-        .splitlines()
-    )
-    known_english_words = (
-        open(ENGLISH_WORDS_FILE_PATH)
-        .read()
-        .splitlines()
-    )
+    known_dutch_words = open(DUTCH_WORDS_FILE_PATH).read().splitlines()
+    known_english_words = open(ENGLISH_WORDS_FILE_PATH).read().splitlines()
     words = input_str.split()
     total_words = len(words)
 
@@ -88,7 +83,7 @@ def count_non_dutch_words(input_str: str) -> dict[str, int]:
     found_non_words = 0
 
     for i, word in enumerate(words):
-        remove_chars = ".,!?;:\"'()[]{}<>-–—_/\\|@#$%^&*~`+=\n\r\t\""
+        remove_chars = '.,!?;:"\'()[]{}<>-–—_/\\|@#$%^&*~`+=\n\r\t"'
         table = str.maketrans("", "", remove_chars)
         clean_word = word.translate(table)
 
@@ -112,4 +107,11 @@ def count_non_dutch_words(input_str: str) -> dict[str, int]:
         else:
             found_non_words += 1
 
-    return {"dutch": found_dutch_words, "english": found_english_words, "proper_nouns": found_proper_nouns, "unknown": found_unknown_words, "non_words": found_non_words}
+    return {
+        "dutch": found_dutch_words,
+        "english": found_english_words,
+        "proper_nouns": found_proper_nouns,
+        "unknown": found_unknown_words,
+        "non_words": found_non_words,
+    }
+
