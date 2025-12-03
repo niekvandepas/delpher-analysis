@@ -2,7 +2,6 @@
 print("Importing libraries...")
 
 import json
-import os
 from dataclasses import asdict
 from typing import Any
 
@@ -12,8 +11,6 @@ from constants import (
     PLAIN_TEXTS_FILE_PATH,
     PROJECT_DIR,
     REGIONAL_DISHES_LIST,
-    TRANSLATED_TEXTS_FILE_PATH,
-    SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH,
 )
 from data_import import data_dir_to_single_json_file, strip_xml_tags
 from delpher_types import (
@@ -36,7 +33,9 @@ from utils import time_function
 
 def main() -> None:
     DATA_DIR = "/Volumes/T9/delpher/keywords_query/"
-    OUT_FILE = f"{PROJECT_DIR}/data/keywords_query_search_results_with_plain_texts.ndjson"
+    OUT_FILE = (
+        f"{PROJECT_DIR}/data/keywords_query_search_results_with_plain_texts.ndjson"
+    )
     data_dir_to_single_json_file(DATA_DIR, OUT_FILE)
     # print("Importing data...")
     # search_results = time_function(import_search_results, SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH)
