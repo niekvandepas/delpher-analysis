@@ -44,6 +44,27 @@ def import_search_results(
         search_results.append(search_result)
     return search_results
 
+def import_search_results_ndjson(
+        path: str, limit: int | None = None
+) -> list[OcredSearchResult]:
+    search_results = []
+    with open(path, "r", encoding="utf-8") as f:
+        for i, line in enumerate(f):
+            if limit is not None and i >= limit:
+                break
+            item = json.loads(line)
+            search_result = OcredSearchResult(
+                publication_date=item.get("publication_date"),
+                title=item.get("title"),
+                ocr_url=item.get("ocr_url"),
+                paper_title=item.get("paper_title"),
+                spatial_creation=item.get("spatial_creation"),
+                identifier=item.get("identifier"),
+                ocr_xml=item.get("ocr_xml"),
+            )
+            search_results.append(search_result)
+    return search_results
+
 
 def strip_xml_tags(xml: str) -> str:
     # Remove XML tags using regex
