@@ -5,7 +5,10 @@ venv/
 data/*
 !data/search_keywords.txt
 
+# Ignore models and binary files
 models/
+*.bin
+
 offsets/
 
 .DS_Store
