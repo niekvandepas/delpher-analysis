@@ -123,6 +123,9 @@ def data_dir_to_single_json_file(data_dir: str, out_file_path: str) -> None:
 
     for root, dirs, files in os.walk(data_dir):
         for file in files:
+        # Skip metadata files on macOS
+            if file.startswith("._"):
+                continue
             absolute_paths.append(os.path.join(root, file))
 
     search_results = []
@@ -131,10 +134,6 @@ def data_dir_to_single_json_file(data_dir: str, out_file_path: str) -> None:
     progress = 0
 
     for path in absolute_paths:
-        # Skip metadata files on macOS
-        if path.startswith("._"):
-            continue
-
         with open(path, "r", encoding="utf-8") as f:
             try:
                 search_result = json.load(f)
