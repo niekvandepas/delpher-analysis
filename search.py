@@ -1,7 +1,6 @@
 import json
 import os
 import sys
-import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
@@ -20,7 +19,138 @@ namespace_map = {
     "srw": "http://www.loc.gov/zing/srw/",
 }
 
+food_keywords = [
+    "recept",
+    "eten",
+    "nootmuskaat",
+    "rijsttafel",
+    "toko",
+    "keuken",
+    "kost",
+    "maaltijd",
+    "spijs",
+    "recept",
+    "recepten",
+    "café",
+    "cafe",
+    "restaurant",
+    "toko",
+    "eten",
+    "specerijen",
+    "ingrediënten",
+    "kruiden",
+    "voedsel",
+    "keuken",
+    "culinair",
+    "koken",
+    "kok",
+    "snackbar",
+    "diner",
+    "avondeten",
+]
 
+thematic_keywords = [
+    "hollandsheid",
+    "nederlandsheid",
+    "calvinisme",
+    "kolonie",
+    "authentiek",
+    "indisch",
+    "erfgoed",
+    "exotisch",
+    "nonchalance",
+    "kolonisatie",
+    "erfgoed",
+    "identiteit",
+    "indonesië",
+    "indonesisch",
+    "oosters",
+    "nationaal",
+    "nederlands",
+    "nederland",
+    "nederlandsheid",
+    "nederlanderschap",
+    "duurzaamheid",
+    "eco",
+    "ecologisch",
+    "technologie",
+    "vooruitgang",
+    "cultureel",
+    "cultuur",
+    "culturen",
+    "nationalisme",
+    "nationaal",
+]
+
+# With these keywords, I try to capture as broad a context as possible around food in the Netherlands.
+# These were developed through qualitative analysis of my fieldwork materials,
+# supplemented by a selection of nearest neighbors from word embedding models.
+dutch_terms: list[str] = [
+  "nederland",
+  "nederlands",
+  "hollands",
+  "holland",
+  "vaderland",
+  "vaderlands",
+  "lage landen",
+  "hollandsch",
+  "oer-hollands",
+  "oud-hollands"
+]
+
+indo_terms = [
+  "indonesische",
+  "indonesisch",
+  "indonesie",
+  "javaans",
+  "indisch",
+  "indonesië",
+  "nederlands-indonesisch",
+  "chinees-indonesisch",
+  "peranakan-indonesisch",
+  "lomboks",
+  "lombokia",
+  "lombok",
+  "lombokana",
+  "indo",
+  "indonesie",
+  "indonesische",
+  "indonesiers",
+  "indonesie",
+  "indonesi",
+  "indonesier",
+  "indonesia",
+  "indonesië",
+  "indonesische",
+  "indonesisch",
+  "maleisiers",
+  "indonesie",
+  "indonesiers",
+  "indonesie",
+  "indonesier",
+  "indonesi",
+  "indonesiers",
+  "indonesia",
+  "indonesië",
+  "indonesie",
+  "indonesisch",
+  "indonesische",
+  "indonesie",
+  "indonesi",
+  "indonesiers",
+  "indonesisch",
+  "indonesië",
+  "indonesia",
+  "indonesië",
+  "indonesie",
+  "indonesi",
+  "indonesiers",
+  "indonesia",
+  "indonesië",
+  "indonesische",
+  "sumatra",
+  "javaanse",
+]
 def fetch_search_results(search_query: SearchQuery) -> bytes:
     query_params = build_query_params(search_query)
     response = requests.get(BASE_URL, params=query_params)
@@ -30,7 +160,7 @@ def fetch_search_results(search_query: SearchQuery) -> bytes:
 
 def build_boolean_query(food_terms: list[str], identity_terms: list[str]) -> str:
     """
-    Constructs a CQL query string: (food1 OR food2) AND (id1 OR id2)
+    Constructs a query string: (food1 OR food2) AND (id1 OR id2)
     """
     # Join terms with OR
     food_group = " OR ".join(f'"{t}"' for t in food_terms)
@@ -195,75 +325,13 @@ def write_to_json_file(search_results):
 
 
 def main():
-    # TODO mkdirs for project (offsets, models, data, search_results) so other people can run my code
+    os.makedirs("offsets", exist_ok=True)
+    os.makedirs("search_results", exist_ok=True)
+    os.makedirs("models", exist_ok=True)
+    os.makedirs("data", exist_ok=True)
 
-    # TODO Wat ik zou kunnen doen is specifieker 'keywords' opstellen per 'hypothese', oftewel, voor de hypothese "technocratisch", een lijst van keywords die daarmee te maken heeft -> dan een dataset opstellen specifiek voor die vraag.
+    keywords_query_text = build_boolean_query(indo_terms, food_keywords)
 
-    food_keywords = [
-        "recept",
-        "eten",
-        "nootmuskaat",
-        "rijsttafel",
-        "toko",
-        "keuken",
-        "kost",
-        "maaltijd",
-        "spijs",
-        "recept",
-        "recepten",
-        "nootmuskaat",
-        "café",
-        "restaurant",
-        "toko",
-        "eten",
-        "specerijen",
-        "ingrediënten",
-        "kruiden",
-        "voedsel",
-        "keuken",
-        "culinair",
-        "koken",
-        "kok",
-        "snackbar",
-        "stamppot",
-        "diner",
-        "avondeten",
-    ]
-
-    thematic_keywords = [
-        "hollandsheid",
-        "nederlandsheid",
-        "calvinisme",
-        "kolonie",
-        "authentiek",
-        "indisch",
-        "erfgoed",
-        "exotisch",
-        "nonchalance",
-        "kolonisatie",
-        "erfgoed",
-        "identiteit",
-        "indonesië",
-        "indonesisch",
-        "oosters",
-        "nationaal",
-        "nederlands",
-        "nederland",
-        "nederlandsheid",
-        "nederlanderschap",
-        "duurzaamheid",
-        "eco",
-        "ecologisch",
-        "technologie",
-        "vooruitgang",
-        "cultureel",
-        "cultuur",
-        "culturen",
-        "nationalisme",
-        "nationaal",
-    ]
-
-    keywords_query_text = build_boolean_query(food_keywords, thematic_keywords)
     print("Constructed Query:", keywords_query_text)
 
     search_query = SearchQuery(
@@ -304,7 +372,7 @@ def main():
 
     # Keep track of the offset so we can stop and resume this script at will without starting over
     offset_file = Path(
-        f"offsets/keywords_query_{search_query.start_date}_{search_query.end_date}_offset.txt"
+        f"offsets/indo_and_food_terms_query_{search_query.start_date}_{search_query.end_date}_offset.txt"
     )
 
     results_stream = fetch_paginated_search_results_stream(
@@ -312,10 +380,68 @@ def main():
     )
 
     search_results_file_name = Path(
-        f"search_results/keywords_query_{search_query.start_date}_{search_query.end_date}_search_results.ndjson"
+        f"search_results/indo_and_food_terms_query_{search_query.start_date}_{search_query.end_date}_search_results.ndjson"
     )
     write_results_stream(results_stream, output_file=search_results_file_name)
 
+def get_nearest_neighbors():
+    import fasttext.util
+    fasttext.util.download_model('nl', if_exists='ignore')  # English
+    ft = fasttext.load_model('cc.nl.300.bin')
 
+    words = [
+      "indonesisch",
+      "indonesische",
+      "indonesie",
+      "javaans",
+      "indisch",
+      "indonesië",
+      "indo",
+      "indonesiers",
+      "indonesier",
+      "indonesisch",
+      "indonesie",
+      "indonesi",
+      "indonesiers",
+      "indonesisch",
+      "indonesië",
+      "indonesia",
+      "indonesië",
+      "indonesie",
+      "indonesische",
+      "indonesiës",
+      "indonesiers",
+      "indonesie",
+      "indonesië",
+      "indonesi",
+      "indonesia",
+      "indonesisch",
+      "indonesische",
+      "indonesiers",
+      "indonesier",
+      "indonesia",
+      "indonesiae",
+      "indonesië",
+      "indonesische",
+      "indonesie",
+      "balinese",
+      "gili",
+      "sanur",
+      "kembali",
+      "lombok",
+      "balim",
+      "indonesia",
+      "phuket",
+      "balisumatra"
+    ]
+
+    deduped_words = list(set(words))
+
+    for word in deduped_words:
+        print(f"Nearest neighbors for '{word}':")
+        neighbors = ft.get_nearest_neighbors(word, k=10)
+        for similarity, neighbor in neighbors:
+            print(f"  {neighbor}: {similarity:.4f}")
+        print()
 if __name__ == "__main__":
     main()

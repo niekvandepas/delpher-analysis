@@ -9,7 +9,7 @@ from delpher_types import OcredSearchResult, SearchQuery, SearchResult
 BASE_URL = "https://jsru.kb.nl/sru/sru"
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SEARCH_QUERY_USED = SearchQuery(
-    search_text="keywords_query",
+    search_text="dutch_and_food_terms_query",
     start_date="2000-01-01",
     end_date="2026-01-01",
     maximum_records=10,
@@ -43,9 +43,14 @@ def read_ndjson(path: Path) -> list[SearchResult]:
 def fetch_result_xml(search_result: SearchResult) -> str:
     if not search_result.ocr_url:
         raise ValueError("Search result does not contain an OCR URL.")
-    response = requests.get(search_result.ocr_url)
-    response.raise_for_status()
-    return response.text
+    try:
+      response = requests.get(search_result.ocr_url)
+      response.raise_for_status()
+      return response.text
+    except:
+        print("Request timed out. Retrying in 5 seconds...")
+        time.sleep(5)
+        fetch_result_xml(search_result)
 
 
 def fetch_and_save_result_texts(
