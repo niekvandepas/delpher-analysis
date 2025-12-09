@@ -34,7 +34,6 @@ from utils import time_function
 # - Is Dutch cuisine portrayed as boring as compared to Indo and Indonesian cuisines?
 # - To what extent is a pragmatic attitude to Dutch cuisine vs a ~culturalist, thick, identity and heritage-focused attitude to Indonesian food visible in the newspaper archives?
 def main() -> None:
-    # Source - https://stackoverflow.com/a
   print("Hello")
 
 def assign_document_topics(
