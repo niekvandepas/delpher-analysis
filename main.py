@@ -32,7 +32,7 @@ from embeddings import (
     train_sentence_transformer_model,
     train_word2vec_model,
 )
-from sentiment_analysis.sentiment_analysis import analyze_sentiments_dutch, analyze_sentiments_english
+from sentiment_analysis.sentiment_analysis import analyze_sentiments_robbert, analyze_sentiments_dutch_fietje, analyze_sentiments_english
 from topic_modelling import run_bertopic
 from utils import time_function
 
@@ -42,11 +42,14 @@ from utils import time_function
 def main() -> None:
     load_dotenv(DOTENV_PATH)
 
-    search_results = import_search_results_ndjson(limit=10000, path="data/dutch_and_food_terms_query_with_plain_texts.ndjson")
+    print("importing search results")
+    search_results = import_search_results_ndjson(limit=200, path="data/dutch_and_food_terms_query_with_plain_texts.ndjson")
+    print("importing search results done")
 
     plain_text_search_results: list[PlainTextSearchResult] = []
 
-    for search_result in search_results:
+    for i, search_result in enumerate(search_results):
+        print(f"Processing search result #{i+1}", end="\r")
         plain_text = normalize_unicode(strip_xml_tags(search_result.ocr_xml))
         search_result_with_plain_text = PlainTextSearchResult(
             publication_date=search_result.publication_date,
@@ -61,17 +64,9 @@ def main() -> None:
 
         plain_text_search_results.append(search_result_with_plain_text)
 
-    translated_search_results = translate_texts_llama(plain_text_search_results)
-
-    json_output_path = "output/translated_search_results_llama3.json"
-
-    os.makedirs(os.path.dirname(json_output_path), exist_ok=True)
-    with open(json_output_path, 'w', encoding='utf-8') as f:
-        import json
-        json.dump(translated_search_results, f, indent=4, ensure_ascii=False)
-
-    sentiment_results_dutch = analyze_sentiments_dutch(plain_text_search_results)
-    sentiment_results_english = analyze_sentiments_english(translated_search_results)
+    print()
+    sentiment_results_robbert = analyze_sentiments_robbert(plain_text_search_results)
+    sentiment_results_fietje = analyze_sentiments_dutch_fietje(plain_text_search_results)
     ...
 
 def assign_document_topics(

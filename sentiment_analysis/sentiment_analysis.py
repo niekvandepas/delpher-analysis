@@ -1,13 +1,15 @@
-from typing import TypedDict
+from time import time
 from sklearn.pipeline import Pipeline  # type: ignore
-from transformers import TranslationPipeline, pipeline  # type: ignore
-from typing import Optional
+from transformers import TranslationPipeline, pipeline, AutoTokenizer, AutoModelForCausalLM # type: ignore
+from typing import List, Optional
+import torch
+
 
 from delpher_types import PlainTextSearchResult, SentimentResult, TranslatedSearchResult
 
 
 
-def analyze_sentiments_dutch(texts: list[PlainTextSearchResult]) -> list[SentimentResult]:
+def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[SentimentResult]:
     sentiment_analysis_pipeline = pipeline(
         "text-classification", model="DTAI-KULeuven/robbert-v2-dutch-sentiment"
     )
@@ -20,17 +22,11 @@ def sentiment_analysis_dutch(
     analysis_pipeline: Pipeline, texts: list[PlainTextSearchResult]
 ) -> list[SentimentResult]:
     results: list[SentimentResult] = []
-    skipped_counter = 0
 
     for i, search_result in enumerate(texts, start=1):
-        print(f"Analyzing text #{i}, skipped: {skipped_counter}", end="\r")
+        print(f"Analyzing text #{i}", end="\r")
 
-        # Skip texts that are too long for the model
-        if len(search_result.plain_text) > 512:
-            skipped_counter += 1
-            continue
-
-        result = analysis_pipeline(text)[0]  # type: ignore
+        result = analysis_pipeline(search_result.plain_text, truncation=True, max_length=512)[0]  # type: ignore
 
         sentiment_result = SentimentResult(
             text=search_result.plain_text,
@@ -118,3 +114,88 @@ def test_deberta():
     pipe = pipeline("fill-mask", model="microsoft/deberta-v3-base")
     result = pipe("I am a <mask> dog")
     print(result)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def analyze_sentiments_dutch_fietje(
+    search_results: List[PlainTextSearchResult]
+) -> List[SentimentResult]:
+
+    device = "cuda" if torch.cuda.is_available() else "cpu"
+
+    tokenizer = AutoTokenizer.from_pretrained("BramVanroy/fietje-2")
+    model = AutoModelForCausalLM.from_pretrained(
+        "BramVanroy/fietje-2",
+        torch_dtype=torch.float16,
+        device_map="auto"
+    )
+
+    def classify_text(search_result: PlainTextSearchResult) -> SentimentResult:
+        label, score = classify_sentiment_fietje(model, tokenizer, search_result.plain_text[:1500])
+        return SentimentResult(
+            text=search_result.plain_text,
+            identifier=search_result.identifier or "",
+            sentiment_label=label,
+            sentiment_score=score,
+        )
+
+    results = []
+
+    for i, search_result in enumerate(search_results):
+        start_time = time()
+        print(f"Analyzing text #{i+1}") # Cannot use \r because torch warnings would overwrite the line
+        classification = classify_text(search_result)
+        results.append(classification)
+        end_time = time()
+        print(f" Done in {end_time - start_time:.2f} seconds.")
+
+    return results
+
+def classify_sentiment_fietje(model, tokenizer, text: str) -> tuple[str, float]:
+    prompt = (
+        "Je bent een sentimentanalyse-model. "
+        "Classificeer de volgende tekst als POSITIEF, NEUTRAAL of NEGATIEF.\n\n"
+        f"Tekst: \"{text}\"\n\n"
+        "Antwoord exact in het volgende JSON-formaat:\n"
+        "{\"label\": \"POS/NEUTRAAL/NEG\", \"score\": 0.xx}\n"
+    )
+
+    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
+    with torch.no_grad():
+        output_ids = model.generate(
+            **inputs,
+            max_new_tokens=40,
+            temperature=0.0
+        )
+
+    output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+
+    # Extract JSON from the tail of the output
+    # We keep this simple and robust
+    import json
+    import re
+
+    match = re.search(r'\{.*\}', output_text, flags=re.DOTALL)
+    if not match:
+        return "NEUTRAAL", 0.50
+
+    try:
+        data = json.loads(match.group(0))
+        label = data.get("label", "NEUTRAAL")
+        score = float(data.get("score", 0.50))
+    except Exception:
+        return "NEUTRAAL", 0.50
+
+    return label.upper(), score
