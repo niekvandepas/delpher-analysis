@@ -44,10 +44,16 @@ class LabeledSearchResult(OcredSearchResult):
     snippet: str
 
 @dataclass(frozen=True)
+class SentimentResult():
+    text: str
+    identifier: str
+    sentiment_label: str
+    sentiment_score: float
+
+@dataclass(frozen=True)
 class IndoAuthenticityResults():
     co_occurence: DataFrame
     most_similar_words: dict[str, str]
-
 
 class EmbeddingModel(Enum):
     WORD2VEC = 1

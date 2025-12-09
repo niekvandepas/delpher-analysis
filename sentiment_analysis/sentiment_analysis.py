@@ -3,16 +3,11 @@ from sklearn.pipeline import Pipeline  # type: ignore
 from transformers import TranslationPipeline, pipeline  # type: ignore
 from typing import Optional
 
-from delpher_types import TranslatedSearchResult
+from delpher_types import PlainTextSearchResult, SentimentResult, TranslatedSearchResult
 
 
-class SentimentResult(TypedDict):
-    text: str
-    label: str
-    score: float
 
-
-def analyze_sentiments_dutch(texts: list[str]) -> list[SentimentResult]:
+def analyze_sentiments_dutch(texts: list[PlainTextSearchResult]) -> list[SentimentResult]:
     # Original model
     sentiment_analysis_pipeline = pipeline(
         "text-classification", model="DTAI-KULeuven/robbert-v2-dutch-sentiment"
@@ -23,21 +18,30 @@ def analyze_sentiments_dutch(texts: list[str]) -> list[SentimentResult]:
 
 
 def sentiment_analysis_dutch(
-    analysis_pipeline: Pipeline, texts: list[str]
+    analysis_pipeline: Pipeline, texts: list[PlainTextSearchResult]
 ) -> list[SentimentResult]:
-    results = []
+    results: list[SentimentResult] = []
     skipped_counter = 0
 
-    for i, text in enumerate(texts, start=1):
+    for i, search_result in enumerate(texts, start=1):
         print(f"Analyzing text #{i}, skipped: {skipped_counter}", end="\r")
+
         # Skip texts that are too long for the model
-        if len(text) > 512:
+        if len(search_result.plain_text) > 512:
             skipped_counter += 1
             continue
+
         result = analysis_pipeline(text)[0]  # type: ignore
-        results.append(
-            {"text": text, "label": result["label"], "score": result["score"]}  # type: ignore
+
+        sentiment_result = SentimentResult(
+            text=search_result.plain_text,
+            identifier=search_result.identifier or "",
+            sentiment_label=result["label"],
+            sentiment_score=result["score"],
         )
+
+        results.append(sentiment_result)
+
     return results
 
 def analyze_sentiments_english(texts: list[TranslatedSearchResult]) -> list[SentimentResult]:
@@ -97,7 +101,14 @@ def sentiment_analysis_english(
             skipped_counter += 1
             continue
 
-        results.append(SentimentResult(text=text, label=result["label"], score=result["score"]))
+        sentiment_result = SentimentResult(
+            text=text,
+            identifier=search_result.identifier or "",
+            sentiment_label=result["label"],
+            sentiment_score=result["score"],
+        )
+
+        results.append(sentiment_result)
 
     return results
 

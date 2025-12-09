@@ -1,6 +1,10 @@
 import os
 import sys
 
+from dotenv import load_dotenv
+
+from translation.translation import translate_texts_llama
+
 print(os.path.dirname(sys.executable))
 # ruff: noqa: E402 # Ignore import positioning for this file
 print("Importing libraries...")
@@ -10,13 +14,15 @@ from typing import Any
 from classifier import classify_articles
 from co_occurence import document_co_occurence
 from constants import (
+    DOTENV_PATH,
     PROJECT_DIR,
 )
-from data_import import strip_xml_tags
+from data_import import import_search_results, import_search_results_ndjson, normalize_unicode, strip_xml_tags
 from delpher_types import (
     EmbeddingModel,
     IndoAuthenticityResults,
     OcredSearchResult,
+    PlainTextSearchResult,
     TranslatedSearchResult,
 )
 from embeddings import (
@@ -26,7 +32,7 @@ from embeddings import (
     train_sentence_transformer_model,
     train_word2vec_model,
 )
-from sentiment_analysis.sentiment_analysis import analyze_sentiments
+from sentiment_analysis.sentiment_analysis import analyze_sentiments_dutch, analyze_sentiments_english
 from topic_modelling import run_bertopic
 from utils import time_function
 
@@ -34,7 +40,39 @@ from utils import time_function
 # - Is Dutch cuisine portrayed as boring as compared to Indo and Indonesian cuisines?
 # - To what extent is a pragmatic attitude to Dutch cuisine vs a ~culturalist, thick, identity and heritage-focused attitude to Indonesian food visible in the newspaper archives?
 def main() -> None:
-  print("Hello")
+    load_dotenv(DOTENV_PATH)
+
+    search_results = import_search_results_ndjson(limit=10000, path="data/dutch_and_food_terms_query_with_plain_texts.ndjson")
+
+    plain_text_search_results: list[PlainTextSearchResult] = []
+
+    for search_result in search_results:
+        plain_text = normalize_unicode(strip_xml_tags(search_result.ocr_xml))
+        search_result_with_plain_text = PlainTextSearchResult(
+            publication_date=search_result.publication_date,
+            title=search_result.title,
+            ocr_url=search_result.ocr_url,
+            paper_title=search_result.paper_title,
+            spatial_creation=search_result.spatial_creation,
+            identifier=search_result.identifier,
+            ocr_xml=search_result.ocr_xml,
+            plain_text=plain_text,
+        )
+
+        plain_text_search_results.append(search_result_with_plain_text)
+
+    translated_search_results = translate_texts_llama(plain_text_search_results)
+
+    json_output_path = "output/translated_search_results_llama3.json"
+
+    os.makedirs(os.path.dirname(json_output_path), exist_ok=True)
+    with open(json_output_path, 'w', encoding='utf-8') as f:
+        import json
+        json.dump(translated_search_results, f, indent=4, ensure_ascii=False)
+
+    sentiment_results_dutch = analyze_sentiments_dutch(plain_text_search_results)
+    sentiment_results_english = analyze_sentiments_english(translated_search_results)
+    ...
 
 def assign_document_topics(
     data: list[OcredSearchResult],
@@ -48,7 +86,7 @@ def assign_document_topics(
 
 def indifference(texts: list[TranslatedSearchResult]) -> Any:
     print("Running indifference tests...")
-    sentiment_results = analyze_sentiments(texts)
+    sentiment_results = analyze_sentiments_english(texts)
 
     return sentiment_results
 
