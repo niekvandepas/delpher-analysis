@@ -9,6 +9,8 @@ from data_import import import_search_results_ndjson, normalize_unicode, strip_x
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
+from utils import truncate_text
+
 MODEL_NAME = 'llama3:8b'
 CLASSIFICATION_CATEGORIES = "[Is about food], [Is not about food]"
 EXAMPLE_TEXT_1 = '\'Drugsteams met Fransen Frankrijk en Nederland strijden samen tegen XTC Van onze politieke redactie Den Haag - Er komen speciale Frans-Nederlandse teams om de productie en verkoop van synthetische drugs te bestrijden. President Chirac en premier Kok hebben dat gisteren afgesproken op de tweede dag van Chiracs staatsbezoek. Chirac noemde de samenwerking in de strijd tegen drugs als stc \'bijzonder goed\' en \'voorbeeldig\'. Hoewel er \'verschil van inzicht\' blijft bestaan, werken beide landen \'op positieve wijze\' samen, zei hij gisteravond als eregast op het jaarlijkse diner van de Vrienden van Nieuwspoort. Frankrijk en Nederland sloegen in 1995 de handen ineen inzake politie, justitie en douane. De samenwerking kreeg een deuk toen een Franse senator Nederland begin 1996 een \'narcostaat\' noemde en Frankrijk de grenscontrole met België weer inroerde om het drugstoerisme de pas af te snijden. Pas sinds 1997 zit er vaart in de samenwerking. De toenmalige ministers van Justitie Sorgdrager en Toubon maakten in dat jaar een einde aan de pesterijtjes over en weer met een symbolische zoen voor de camera\'s. Met steun van Chirac en Kok werd vanaf dat moment voluit de strijd tegen xtc ingezet. Gisteren zei Chirac overigens dat hij de tijd nog niet rijp acht voor volledige toepassing van het Verdrag van Schengen, dat open grenzen voorschrijft. Premier Kok zat er niet mee. Hij deed de handhaving van de grenscontrole gisteren af als \'symboolpolitiek\': "In de praktijk stelt het weinig voor." Het staatsbezoek stond in het teken van verzoening en begrip. Volgens Chirac leidden \'natuurwetten, vrijheid van denken en economische noodzaak\' in Nederland tot \'wat wij Fransen vaak voor overdreven laisser-faire houden\', maar wat Nederland beschouwt als \'een rechtmatig gedogen\'. "Ikben blij hier te zijn, en ditis absoluut geen diplomatiek zinnetje", zei Chirac. Op pagina g| Chirac vraagt begrip voor Franse deugden Chirac vraagt begrip voor Franse deugden Vervolg van pagina i Staatsbezoek Maar de liefde kan niet van één kant komen. Chirac vroeg eveneens begrip voor enkele Franse deugden, die vaak versleten worden voor verkalkte tradities. "U vindt dat het alles \'staatsbemoeienis\' is wat klok slaat in Frankrijk. Maar dat is steeds minder het geval. U vindt dat Frankrijk protectionistische trekken vertoont. Maar wij staan in de wereld op de vierde plaats qua in- en uitvoer. Frankrijk wekt vaak verbazing doordat het zo aan zijn taal en cultuur gehecht is. Het tegendeel is waar: wij zitten midden in de mondialisering, maar opening is niet synoniem met eenvormigheid." De jonge SP-senator Van Vugt (20) werd gisteren gearresteerd wegens verstoring van de openbare orde: hij protesteerde zonder vergunning in het aangezicht van Chirac tegen het Franse nucleaire beleid met een fluitje en een T-shirt dat herinnerde aan de Franse kernproeven. Andere demonstranten slaagden er in te ontkomen.\''
@@ -47,12 +49,6 @@ def classify_text_with_ollama(client: ollama.Client, text: str) -> str:
         return response['message']['content'].strip()
     except Exception as e:
         return f"ERROR: {e}"
-
-def truncate_text(text: str, max_chars: int = 2000) -> str:
-    """Truncates text to a maximum number of characters."""
-    if len(text) <= max_chars:
-        return text
-    return text[:max_chars]
 
 def process_single_item(search_result, client, file_lock, out_file_path, processed_ids):
     """Process a single classification task."""
