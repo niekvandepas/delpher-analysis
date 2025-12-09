@@ -21,21 +21,24 @@ def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[Senti
 def sentiment_analysis_dutch(
     analysis_pipeline: Pipeline, texts: list[PlainTextSearchResult]
 ) -> list[SentimentResult]:
-    results: list[SentimentResult] = []
 
-    for i, search_result in enumerate(texts, start=1):
-        print(f"Analyzing text #{i}", end="\r")
+    plain_texts = [t.plain_text for t in texts]
 
-        result = analysis_pipeline(search_result.plain_text, truncation=True, max_length=512)[0]  # type: ignore
+    outputs = analysis_pipeline(
+        plain_texts,
+        truncation=True,
+        max_length=512,
+        batch_size=32,   # experiment: 32–128 for fast GPU
+    )
 
-        sentiment_result = SentimentResult(
+    results = []
+    for search_result, out in zip(texts, outputs):
+        results.append(SentimentResult(
             text=search_result.plain_text,
             identifier=search_result.identifier or "",
-            sentiment_label=result["label"],
-            sentiment_score=result["score"],
-        )
-
-        results.append(sentiment_result)
+            sentiment_label=out["label"],
+            sentiment_score=out["score"],
+        ))
 
     return results
 
