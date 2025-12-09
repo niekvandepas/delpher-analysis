@@ -35,3 +35,6 @@ DOTENV_PATH =f"{PROJECT_DIR}/.env"
 
 DUTCH_WORDS_FILE_PATH = f"{PROJECT_DIR}/data/dutch_words.txt"
 ENGLISH_WORDS_FILE_PATH = f"{PROJECT_DIR}/data/english_words.txt"
+
+FIETJE_SENTIMENT_RESULTS_PATH = f"{PROJECT_DIR}/output/fietje_sentiment.json"
+ROBBERT_SENTIMENT_RESULTS_PATH = f"{PROJECT_DIR}/output/robbert_sentiment.json"
