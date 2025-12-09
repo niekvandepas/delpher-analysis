@@ -12,7 +12,35 @@ class SentimentResult(TypedDict):
     score: float
 
 
-def analyze_sentiments(texts: list[TranslatedSearchResult]) -> list[SentimentResult]:
+def analyze_sentiments_dutch(texts: list[str]) -> list[SentimentResult]:
+    # Original model
+    sentiment_analysis_pipeline = pipeline(
+        "text-classification", model="DTAI-KULeuven/robbert-v2-dutch-sentiment"
+    )
+
+    sentiment_results = sentiment_analysis_dutch(sentiment_analysis_pipeline, texts)
+    return sentiment_results
+
+
+def sentiment_analysis_dutch(
+    analysis_pipeline: Pipeline, texts: list[str]
+) -> list[SentimentResult]:
+    results = []
+    skipped_counter = 0
+
+    for i, text in enumerate(texts, start=1):
+        print(f"Analyzing text #{i}, skipped: {skipped_counter}", end="\r")
+        # Skip texts that are too long for the model
+        if len(text) > 512:
+            skipped_counter += 1
+            continue
+        result = analysis_pipeline(text)[0]  # type: ignore
+        results.append(
+            {"text": text, "label": result["label"], "score": result["score"]}  # type: ignore
+        )
+    return results
+
+def analyze_sentiments_english(texts: list[TranslatedSearchResult]) -> list[SentimentResult]:
     # English-language model
     pipe = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
 
@@ -31,11 +59,11 @@ def analyze_sentiments(texts: list[TranslatedSearchResult]) -> list[SentimentRes
     if model_max_length is None:
         model_max_length = 512
 
-    sentiment_results = sentiment_analysis(pipe, texts, max_text_length=10000, model_max_length=model_max_length)  # type: ignore
+    sentiment_results = sentiment_analysis_english(pipe, texts, max_text_length=10000, model_max_length=model_max_length)  # type: ignore
     return sentiment_results
 
 
-def sentiment_analysis(
+def sentiment_analysis_english(
     analysis_pipeline: Pipeline,
     texts: list[TranslatedSearchResult],
     max_text_length: int = 10000,
