@@ -26,7 +26,7 @@ from embeddings import (
     train_sentence_transformer_model,
     train_word2vec_model,
 )
-from sentiment_analysis import analyze_sentiments
+from sentiment_analysis.sentiment_analysis import analyze_sentiments
 from topic_modelling import run_bertopic
 from utils import time_function
 
