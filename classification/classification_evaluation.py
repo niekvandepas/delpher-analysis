@@ -108,6 +108,8 @@ def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
     result = df.iloc[:len(annotations)].copy()
     result["true_label"] = annotations
     return result
+
+
 def print_metrics(df: pd.DataFrame):
     """Calculates and prints confusion matrix and classification report."""
     if 'true_label' not in df.columns:
