@@ -1,9 +1,11 @@
 import os
 import json
 from pathlib import Path
+from dotenv import load_dotenv
 import requests
 import time
 
+from constants import PROJECT_DIR
 from delpher_types import OcredSearchResult, SearchQuery, SearchResult
 
 BASE_URL = "https://jsru.kb.nl/sru/sru"
@@ -20,7 +22,6 @@ SEARCH_QUERY_USED = SearchQuery(
 JSON_FILE_PATH = Path(
     f"search_results/{SEARCH_QUERY_USED.search_text}_{SEARCH_QUERY_USED.start_date}_{SEARCH_QUERY_USED.end_date}_search_results.ndjson"
 )
-DATA_DIR_PATH = "/Volumes/T9/delpher/"
 
 
 def read_ndjson(path: Path) -> list[SearchResult]:
@@ -56,6 +57,13 @@ def fetch_result_xml(search_result: SearchResult) -> str:
 def fetch_and_save_result_texts(
     search_results: list[SearchResult], data_dir_name: str, timeout_between_requests=3.0
 ) -> None:
+    dotenv_path = os.path.join(PROJECT_DIR, '.env')
+    load_dotenv(dotenv_path)
+
+    DATA_DIR_PATH = os.environ.get("DATA_DIR_PATH")
+    if not DATA_DIR_PATH:
+        raise ValueError("DATA_DIR_PATH not set in .env file.")
+
     for i, result in enumerate(search_results):
         print(
             f"Processing record {i + 1}/{len(search_results)} ({(i + 1) / len(search_results) * 100:.2f}%)"
