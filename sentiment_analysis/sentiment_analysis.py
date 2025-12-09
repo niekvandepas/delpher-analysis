@@ -8,7 +8,6 @@ from delpher_types import PlainTextSearchResult, SentimentResult, TranslatedSear
 
 
 def analyze_sentiments_dutch(texts: list[PlainTextSearchResult]) -> list[SentimentResult]:
-    # Original model
     sentiment_analysis_pipeline = pipeline(
         "text-classification", model="DTAI-KULeuven/robbert-v2-dutch-sentiment"
     )
