@@ -11,7 +11,7 @@ from delpher_types import PlainTextSearchResult, SentimentResult, TranslatedSear
 
 def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[SentimentResult]:
     sentiment_analysis_pipeline = pipeline(
-        "text-classification", model="DTAI-KULeuven/robbert-v2-dutch-sentiment"
+        "text-classification", model="DTAI-KULeuven/robbert-v2-dutch-sentiment", device=0
     )
 
     sentiment_results = sentiment_analysis_dutch(sentiment_analysis_pipeline, texts)
