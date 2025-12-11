@@ -12,7 +12,6 @@ RUN apt-get update && apt-get install -y \
     zsh \
     vim \
     && rm -rf /var/lib/apt/lists/* \
-    && mkdir -p /var/run/sshd
 
 # --- Install Ollama ---
 ENV OLLAMA_MODELS=/workspace/.ollama/models
