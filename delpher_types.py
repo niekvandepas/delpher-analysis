@@ -43,6 +43,13 @@ class LabeledSearchResult(OcredSearchResult):
     is_about_indonesia: bool
     snippet: str
 
+def enum_serializer(obj):
+    """Converts Enum objects to their string value for JSON serialization."""
+    if isinstance(obj, Enum):
+        return obj.value
+    # Optional: If you have other non-serializable types, handle them here
+    raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
+
 class SentimentLabel(Enum):
     POSITIVE = "POSITIVE"
     NEGATIVE = "NEGATIVE"

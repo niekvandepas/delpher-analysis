@@ -26,6 +26,7 @@ from delpher_types import (
     OcredSearchResult,
     PlainTextSearchResult,
     TranslatedSearchResult,
+    enum_serializer,
 )
 from embeddings import (
     get_most_similar_sentence_transformer_documents,
@@ -87,13 +88,13 @@ def main() -> None:
     ollama_path = "output/ollama_sentiment.json"
 
     with open(robbert_path, "w", encoding="utf-8") as f:
-        json.dump(robbert_json, f, ensure_ascii=False, indent=2)
+        json.dump(robbert_json, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
     with open(fietje_path, "w", encoding="utf-8") as f:
-        json.dump(fietje_json, f, ensure_ascii=False, indent=2)
+        json.dump(fietje_json, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
     with open(ollama_path, "w", encoding="utf-8") as f:
-        json.dump(ollama_json, f, ensure_ascii=False, indent=2)
+        json.dump(ollama_json, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
     ...
 
