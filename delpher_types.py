@@ -43,11 +43,16 @@ class LabeledSearchResult(OcredSearchResult):
     is_about_indonesia: bool
     snippet: str
 
+class SentimentLabel(Enum):
+    POSITIVE = "POSITIVE"
+    NEGATIVE = "NEGATIVE"
+    NEUTRAL = "NEUTRAL"
+
 @dataclass(frozen=True)
 class SentimentResult():
     text: str
     identifier: str
-    sentiment_label: str
+    sentiment_label: SentimentLabel
     sentiment_score: float
 
 @dataclass(frozen=True)

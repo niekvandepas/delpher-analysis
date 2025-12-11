@@ -1,11 +1,11 @@
 from time import time
 from sklearn.pipeline import Pipeline  # type: ignore
 from transformers import TranslationPipeline, pipeline, AutoTokenizer, AutoModelForCausalLM # type: ignore
-from typing import List, Optional
+from typing import Any, List, Optional, cast
 import torch
 
 
-from delpher_types import PlainTextSearchResult, SentimentResult, TranslatedSearchResult
+from delpher_types import PlainTextSearchResult, SentimentLabel, SentimentResult, TranslatedSearchResult
 
 
 
@@ -24,19 +24,30 @@ def sentiment_analysis_dutch(
 
     plain_texts = [t.plain_text for t in texts]
 
-    outputs = analysis_pipeline(
-        plain_texts,
-        truncation=True,
-        max_length=512,
-        batch_size=32,
+    outputs = cast(
+        list[dict[str, Any]],
+        analysis_pipeline(
+            plain_texts,
+            truncation=True,
+            max_length=512,
+            batch_size=32,
+        ),
     )
 
-    results = []
+
+    results: list[SentimentResult] = []
     for search_result, out in zip(texts, outputs):
+        if out["label"] == "Positive":
+            normalized_label = SentimentLabel.POSITIVE
+        elif out["label"] == "Negative":
+            normalized_label = SentimentLabel.NEGATIVE
+        elif out["label"] == "Neutral":
+            normalized_label = SentimentLabel.NEUTRAL
+
         results.append(SentimentResult(
             text=search_result.plain_text,
             identifier=search_result.identifier or "",
-            sentiment_label=out["label"],
+            sentiment_label=normalized_label,
             sentiment_score=out["score"],
         ))
 
@@ -147,10 +158,17 @@ def analyze_sentiments_dutch_fietje(
 
     def classify_text(search_result: PlainTextSearchResult) -> SentimentResult:
         label, score = classify_sentiment_fietje(model, tokenizer, search_result.plain_text[:1500])
+        if label == "POSITIEF":
+            normalized_label = SentimentLabel.POSITIVE
+        elif label == "NEGATIEF":
+            normalized_label = SentimentLabel.NEGATIVE
+        else:
+            normalized_label = SentimentLabel.NEUTRAL
+
         return SentimentResult(
             text=search_result.plain_text,
             identifier=search_result.identifier or "",
-            sentiment_label=label,
+            sentiment_label=normalized_label,
             sentiment_score=score,
         )
 
