@@ -34,7 +34,7 @@ from embeddings import (
     train_sentence_transformer_model,
     train_word2vec_model,
 )
-from sentiment_analysis.sentiment_analysis import analyze_sentiments_robbert, analyze_sentiments_dutch_fietje, analyze_sentiments_english
+from sentiment_analysis.sentiment_analysis import analyze_sentiments_dutch_ollama, analyze_sentiments_robbert, analyze_sentiments_dutch_fietje, analyze_sentiments_english
 from topic_modelling import run_bertopic
 from utils import time_function
 
@@ -76,18 +76,24 @@ def main() -> None:
     print()
     sentiment_results_robbert = analyze_sentiments_robbert(plain_text_search_results)
     sentiment_results_fietje = analyze_sentiments_dutch_fietje(plain_text_search_results)
+    sentiment_results_ollama = analyze_sentiments_dutch_ollama(plain_text_search_results)
 
     robbert_json = [asdict(r) for r in sentiment_results_robbert]
     fietje_json = [asdict(r) for r in sentiment_results_fietje]
+    ollama_json = [asdict(r) for r in sentiment_results_ollama]
 
     robbert_path = "output/robbert_sentiment.json"
     fietje_path = "output/fietje_sentiment.json"
+    ollama_path = "output/ollama_sentiment.json"
 
     with open(robbert_path, "w", encoding="utf-8") as f:
         json.dump(robbert_json, f, ensure_ascii=False, indent=2)
 
     with open(fietje_path, "w", encoding="utf-8") as f:
         json.dump(fietje_json, f, ensure_ascii=False, indent=2)
+
+    with open(ollama_path, "w", encoding="utf-8") as f:
+        json.dump(ollama_json, f, ensure_ascii=False, indent=2)
 
     ...
 

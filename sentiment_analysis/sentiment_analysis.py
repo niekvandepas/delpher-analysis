@@ -1,4 +1,8 @@
+from concurrent.futures import ThreadPoolExecutor, as_completed
+import json
+import os
 from time import time
+import ollama
 from sklearn.pipeline import Pipeline  # type: ignore
 from transformers import TranslationPipeline, pipeline, AutoTokenizer, AutoModelForCausalLM # type: ignore
 from typing import Any, List, Optional, cast
@@ -220,3 +224,105 @@ def classify_sentiment_fietje(model, tokenizer, text: str) -> tuple[str, float]:
         return "NEUTRAAL", 0.50
 
     return label.upper(), score
+
+def analyze_sentiments_dutch_ollama(
+    search_results: List[PlainTextSearchResult]
+) -> List[SentimentResult]:
+    """
+    Performs Dutch sentiment analysis using a local Ollama model,
+    utilizing multithreading for increased throughput.
+    """
+
+    # Configuration (aligned with your classification script)
+    MODEL_NAME = 'llama3:8b'
+    NUM_WORKERS = os.environ.get("NUM_WORKERS")
+    if NUM_WORKERS:
+        NUM_WORKERS = int(NUM_WORKERS)
+    else:
+        print("Environment variable NUM_WORKERS not set, defaulting to 1.")
+        NUM_WORKERS = 1
+
+    SYSTEM_PROMPT = (
+        "Je bent een expert in sentimentanalyse voor Nederlandse teksten. "
+        "Je taak is om het sentiment van de gegeven tekst te bepalen. "
+        "De mogelijke categorieën zijn: POSITIVE, NEGATIVE, of NEUTRAL. "
+        "Geef ook een zekerheidsscore (confidence score) tussen 0.0 en 1.0. "
+        "Antwoord UITSLUITEND met een JSON-object in het volgende formaat: "
+        "{\"label\": \"POSITIVE\", \"score\": 0.95}. "
+        "Geen andere tekst of uitleg."
+    )
+
+    def process_single_sentiment(item: PlainTextSearchResult) -> SentimentResult:
+        """Processes a single item in a dedicated thread."""
+        start_time = time()
+
+        client = ollama.Client()  # Each thread gets its own client
+
+        # Truncate text to respect context limits
+        text_content = item.plain_text[:2000] if item.plain_text else ""
+
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": f"Text: {text_content}"}
+        ]
+
+        label = SentimentLabel.NEUTRAL
+        score = 0.5
+
+        try:
+            response = client.chat(
+                model=MODEL_NAME,
+                messages=messages,
+                options={"temperature": 0.0},
+                format="json"  # Force JSON output from Ollama
+            )
+
+            content = response['message']['content']
+            data = json.loads(content)
+
+            raw_label = data.get("label", "NEUTRAL").upper()
+            score = float(data.get("score", 0.5))
+
+            if "POS" in raw_label:
+                label = SentimentLabel.POSITIVE
+            elif "NEG" in raw_label:
+                label = SentimentLabel.NEGATIVE
+            else:
+                label = SentimentLabel.NEUTRAL
+
+        except Exception as e:
+            # Fallback to neutral on error
+            print(f"Error analyzing item {item.identifier}: {e}")
+            label = SentimentLabel.NEUTRAL
+            score = 0.0
+
+        end_time = time()
+        print(f"Processed item {item.identifier} in {end_time - start_time:.2f} seconds.")
+
+        return SentimentResult(
+            text=item.plain_text,
+            identifier=item.identifier or "",
+            sentiment_label=label,
+            sentiment_score=score
+        )
+
+    results: List[SentimentResult] = []
+    print(f"Starting Ollama sentiment analysis on {len(search_results)} items with {NUM_WORKERS} workers...")
+
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        future_to_item = {
+            executor.submit(process_single_sentiment, item): item
+            for item in search_results
+        }
+
+        completed_count = 0
+        for future in as_completed(future_to_item):
+            result = future.result()
+            results.append(result)
+
+            completed_count += 1
+            if completed_count % 10 == 0 or completed_count == len(search_results):
+                print(f"Processed {completed_count}/{len(search_results)}", end='\r')
+
+    print(f"\nAnalysis complete. Processed {len(results)} items.")
+    return results
