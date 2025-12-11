@@ -40,6 +40,13 @@ else
     git clone https://github.com/niekvandepas/delpher-analysis.git
 fi
 
-# --- Keep Alive (Crucial for RunPod) ---
 echo "✨ Setup complete. Keeping container alive..."
-sleep infinity
+bash -c 'apt update; \
+DEBIAN_FRONTEND=noninteractive apt-get install openssh-server -y; \
+mkdir -p ~/.ssh; \
+cd ~/.ssh; \
+chmod 700 ~/.ssh; \
+echo "$SSH_PUBLIC_KEY" >> authorized_keys; \
+chmod 700 authorized_keys; \
+service ssh restart; \
+sleep infinity'
