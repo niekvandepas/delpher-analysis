@@ -14,12 +14,85 @@ from delpher_types import PlainTextSearchResult, SentimentLabel, SentimentResult
 
 
 def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[SentimentResult]:
-    sentiment_analysis_pipeline = pipeline(
-        "text-classification", model="DTAI-KULeuven/robbert-v2-dutch-sentiment", device=0
-    )
+    """
+    Performs Dutch sentiment analysis using RoBERTa model,
+    utilizing multithreading for increased throughput.
+    """
+    NUM_WORKERS = os.environ.get("NUM_WORKERS")
+    if NUM_WORKERS:
+        NUM_WORKERS = int(NUM_WORKERS)
+    else:
+        print("Environment variable NUM_WORKERS not set, defaulting to 1.")
+        NUM_WORKERS = 1
 
-    sentiment_results = sentiment_analysis_dutch(sentiment_analysis_pipeline, texts)
-    return sentiment_results
+    def process_single_text(search_result: PlainTextSearchResult) -> SentimentResult:
+        """Processes a single text in a dedicated thread."""
+        start_time = time()
+
+        # Each thread gets its own pipeline
+        sentiment_pipeline = pipeline(
+            "text-classification",
+            model="DTAI-KULeuven/robbert-v2-dutch-sentiment",
+            device=0
+        )
+
+        try:
+            output = sentiment_pipeline(
+                search_result.plain_text,
+                truncation=True,
+                max_length=512,
+            )[0]
+
+            if output["label"] == "Positive":
+                normalized_label = SentimentLabel.POSITIVE
+            elif output["label"] == "Negative":
+                normalized_label = SentimentLabel.NEGATIVE
+            elif output["label"] == "Neutral":
+                normalized_label = SentimentLabel.NEUTRAL
+            else:
+                normalized_label = SentimentLabel.NEUTRAL
+
+            result = SentimentResult(
+                text=search_result.plain_text,
+                identifier=search_result.identifier or "",
+                sentiment_label=normalized_label,
+                sentiment_score=output["score"],
+            )
+
+        except Exception as e:
+            print(f"Error analyzing item {search_result.identifier}: {e}")
+            result = SentimentResult(
+                text=search_result.plain_text,
+                identifier=search_result.identifier or "",
+                sentiment_label=SentimentLabel.NEUTRAL,
+                sentiment_score=0.0,
+            )
+
+        end_time = time()
+        print(f"Processed item {search_result.identifier} in {end_time - start_time:.2f} seconds.")
+
+        return result
+
+    results: list[SentimentResult] = []
+    print(f"Starting RoBERTa sentiment analysis on {len(texts)} items with {NUM_WORKERS} workers...")
+
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        future_to_item = {
+            executor.submit(process_single_text, item): item
+            for item in texts
+        }
+
+        completed_count = 0
+        for future in as_completed(future_to_item):
+            result = future.result()
+            results.append(result)
+
+            completed_count += 1
+            if completed_count % 10 == 0 or completed_count == len(texts):
+                print(f"Processed {completed_count}/{len(texts)}", end='\r')
+
+    print(f"\nAnalysis complete. Processed {len(results)} items.")
+    return results
 
 
 def sentiment_analysis_dutch(
@@ -150,42 +223,78 @@ def test_deberta():
 def analyze_sentiments_dutch_fietje(
     search_results: List[PlainTextSearchResult]
 ) -> List[SentimentResult]:
+    """
+    Performs Dutch sentiment analysis using Fietje-2 model,
+    utilizing multithreading for increased throughput.
+    """
+    NUM_WORKERS = os.environ.get("NUM_WORKERS")
+    if NUM_WORKERS:
+        NUM_WORKERS = int(NUM_WORKERS)
+    else:
+        print("Environment variable NUM_WORKERS not set, defaulting to 1.")
+        NUM_WORKERS = 1
 
-    device = "cuda" if torch.cuda.is_available() else "cpu"
+    def process_single_text(search_result: PlainTextSearchResult) -> SentimentResult:
+        """Processes a single text in a dedicated thread."""
+        start_time = time()
 
-    tokenizer = AutoTokenizer.from_pretrained("BramVanroy/fietje-2")
-    model = AutoModelForCausalLM.from_pretrained(
-        "BramVanroy/fietje-2",
-        torch_dtype=torch.float16,
-        device_map="auto"
-    )
-
-    def classify_text(search_result: PlainTextSearchResult) -> SentimentResult:
-        label, score = classify_sentiment_fietje(model, tokenizer, search_result.plain_text[:1500])
-        if label == "POSITIEF":
-            normalized_label = SentimentLabel.POSITIVE
-        elif label == "NEGATIEF":
-            normalized_label = SentimentLabel.NEGATIVE
-        else:
-            normalized_label = SentimentLabel.NEUTRAL
-
-        return SentimentResult(
-            text=search_result.plain_text,
-            identifier=search_result.identifier or "",
-            sentiment_label=normalized_label,
-            sentiment_score=score,
+        # Each thread gets its own model and tokenizer
+        tokenizer = AutoTokenizer.from_pretrained("BramVanroy/fietje-2")
+        model = AutoModelForCausalLM.from_pretrained(
+            "BramVanroy/fietje-2",
+            torch_dtype=torch.float16,
+            device_map="auto"
         )
 
-    results = []
+        try:
+            label, score = classify_sentiment_fietje(model, tokenizer, search_result.plain_text[:1500])
+            if label == "POSITIEF":
+                normalized_label = SentimentLabel.POSITIVE
+            elif label == "NEGATIEF":
+                normalized_label = SentimentLabel.NEGATIVE
+            else:
+                normalized_label = SentimentLabel.NEUTRAL
 
-    for i, search_result in enumerate(search_results):
-        start_time = time()
-        print(f"Analyzing text #{i+1} with Fietje") # Cannot use \r because torch warnings would overwrite the line
-        classification = classify_text(search_result)
-        results.append(classification)
+            result = SentimentResult(
+                text=search_result.plain_text,
+                identifier=search_result.identifier or "",
+                sentiment_label=normalized_label,
+                sentiment_score=score,
+            )
+
+        except Exception as e:
+            print(f"Error analyzing item {search_result.identifier}: {e}")
+            result = SentimentResult(
+                text=search_result.plain_text,
+                identifier=search_result.identifier or "",
+                sentiment_label=SentimentLabel.NEUTRAL,
+                sentiment_score=0.0,
+            )
+
         end_time = time()
-        print(f" Done in {end_time - start_time:.2f} seconds.")
+        print(f"Processed item {search_result.identifier} in {end_time - start_time:.2f} seconds.")
 
+        return result
+
+    results: List[SentimentResult] = []
+    print(f"Starting Fietje sentiment analysis on {len(search_results)} items with {NUM_WORKERS} workers...")
+
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+        future_to_item = {
+            executor.submit(process_single_text, item): item
+            for item in search_results
+        }
+
+        completed_count = 0
+        for future in as_completed(future_to_item):
+            result = future.result()
+            results.append(result)
+
+            completed_count += 1
+            if completed_count % 10 == 0 or completed_count == len(search_results):
+                print(f"Processed {completed_count}/{len(search_results)}", end='\r')
+
+    print(f"\nAnalysis complete. Processed {len(results)} items.")
     return results
 
 def classify_sentiment_fietje(model, tokenizer, text: str) -> tuple[str, float]:
