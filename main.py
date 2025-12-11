@@ -43,9 +43,15 @@ from utils import time_function
 # - To what extent is a pragmatic attitude to Dutch cuisine vs a ~culturalist, thick, identity and heritage-focused attitude to Indonesian food visible in the newspaper archives?
 def main() -> None:
     load_dotenv(DOTENV_PATH)
+    DATA_IMPORT_LIMIT = os.environ.get("DATA_IMPORT_LIMIT")
+    if not DATA_IMPORT_LIMIT:
+        print("Environment variable DATA_IMPORT_LIMIT not set, loading all data.")
+        DATA_IMPORT_LIMIT = None
+    else:
+        DATA_IMPORT_LIMIT = int(DATA_IMPORT_LIMIT)
 
     print("importing search results")
-    search_results = import_search_results_ndjson(limit=200, path="data/dutch_and_food_terms_query_with_plain_texts.ndjson")
+    search_results = import_search_results_ndjson(limit=DATA_IMPORT_LIMIT, path="data/dutch_and_food_terms_query_with_plain_texts.ndjson")
     print("importing search results done")
 
     plain_text_search_results: list[PlainTextSearchResult] = []
