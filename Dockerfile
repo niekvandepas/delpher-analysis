@@ -4,6 +4,8 @@ FROM runpod/pytorch:2.4.0-py3.11-cuda12.4.1-devel-ubuntu22.04
 # Merged your two blocks into one. Added python3-pip to ensure pip is available.
 RUN apt-get update && apt-get install -y \
     openssh-server \
+    openssh-client \
+    openssh-sftp-server \
     curl \
     git \
     python3-pip \
