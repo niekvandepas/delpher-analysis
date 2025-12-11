@@ -180,7 +180,7 @@ def analyze_sentiments_dutch_fietje(
 
     for i, search_result in enumerate(search_results):
         start_time = time()
-        print(f"Analyzing text #{i+1}") # Cannot use \r because torch warnings would overwrite the line
+        print(f"Analyzing text #{i+1} with Fietje") # Cannot use \r because torch warnings would overwrite the line
         classification = classify_text(search_result)
         results.append(classification)
         end_time = time()
