@@ -48,6 +48,7 @@ def main() -> None:
         print("Environment variable DATA_IMPORT_LIMIT not set, loading all data.")
         DATA_IMPORT_LIMIT = None
     else:
+        print(f"Environment variable DATA_IMPORT_LIMIT set to {DATA_IMPORT_LIMIT}, limiting imported data.")
         DATA_IMPORT_LIMIT = int(DATA_IMPORT_LIMIT)
 
     print("importing search results")
