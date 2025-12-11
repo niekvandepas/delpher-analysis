@@ -28,7 +28,7 @@ def sentiment_analysis_dutch(
         plain_texts,
         truncation=True,
         max_length=512,
-        batch_size=32,   # experiment: 32–128 for fast GPU
+        batch_size=32,
     )
 
     results = []
