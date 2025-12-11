@@ -18,12 +18,12 @@ def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[Senti
     Performs Dutch sentiment analysis using RoBERTa model,
     utilizing multithreading for increased throughput.
     """
-    NUM_WORKERS = os.environ.get("NUM_WORKERS")
-    if NUM_WORKERS:
-        NUM_WORKERS = int(NUM_WORKERS)
+    NUM_WORKERS_ROBBERT = os.environ.get("NUM_WORKERS_ROBBERT")
+    if NUM_WORKERS_ROBBERT:
+        NUM_WORKERS_ROBBERT = int(NUM_WORKERS_ROBBERT)
     else:
-        print("Environment variable NUM_WORKERS not set, defaulting to 1.")
-        NUM_WORKERS = 1
+        print("Environment variable NUM_WORKERS_ROBBERT not set, defaulting to 1.")
+        NUM_WORKERS_ROBBERT = 1
 
     def process_single_text(search_result: PlainTextSearchResult) -> SentimentResult:
         """Processes a single text in a dedicated thread."""
@@ -74,9 +74,9 @@ def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[Senti
         return result
 
     results: list[SentimentResult] = []
-    print(f"Starting RoBERTa sentiment analysis on {len(texts)} items with {NUM_WORKERS} workers...")
+    print(f"Starting RoBERTa sentiment analysis on {len(texts)} items with {NUM_WORKERS_ROBBERT} workers...")
 
-    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS_ROBBERT) as executor:
         future_to_item = {
             executor.submit(process_single_text, item): item
             for item in texts
@@ -227,12 +227,12 @@ def analyze_sentiments_dutch_fietje(
     Performs Dutch sentiment analysis using Fietje-2 model,
     utilizing multithreading for increased throughput.
     """
-    NUM_WORKERS = os.environ.get("NUM_WORKERS")
-    if NUM_WORKERS:
-        NUM_WORKERS = int(NUM_WORKERS)
+    NUM_WORKERS_FIETJE = os.environ.get("NUM_WORKERS_FIETJE")
+    if NUM_WORKERS_FIETJE:
+        NUM_WORKERS_FIETJE = int(NUM_WORKERS_FIETJE)
     else:
-        print("Environment variable NUM_WORKERS not set, defaulting to 1.")
-        NUM_WORKERS = 1
+        print("Environment variable NUM_WORKERS_FIETJE not set, defaulting to 1.")
+        NUM_WORKERS_FIETJE = 1
 
     def process_single_text(search_result: PlainTextSearchResult) -> SentimentResult:
         """Processes a single text in a dedicated thread."""
@@ -277,9 +277,9 @@ def analyze_sentiments_dutch_fietje(
         return result
 
     results: List[SentimentResult] = []
-    print(f"Starting Fietje sentiment analysis on {len(search_results)} items with {NUM_WORKERS} workers...")
+    print(f"Starting Fietje sentiment analysis on {len(search_results)} items with {NUM_WORKERS_FIETJE} workers...")
 
-    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS_FIETJE) as executor:
         future_to_item = {
             executor.submit(process_single_text, item): item
             for item in search_results
@@ -344,12 +344,12 @@ def analyze_sentiments_dutch_ollama(
 
     # Configuration (aligned with your classification script)
     MODEL_NAME = 'llama3:8b'
-    NUM_WORKERS = os.environ.get("NUM_WORKERS")
-    if NUM_WORKERS:
-        NUM_WORKERS = int(NUM_WORKERS)
+    NUM_WORKERS_OLLAMA = os.environ.get("NUM_WORKERS_OLLAMA")
+    if NUM_WORKERS_OLLAMA:
+        NUM_WORKERS_OLLAMA = int(NUM_WORKERS_OLLAMA)
     else:
-        print("Environment variable NUM_WORKERS not set, defaulting to 1.")
-        NUM_WORKERS = 1
+        print("Environment variable NUM_WORKERS_OLLAMA not set, defaulting to 1.")
+        NUM_WORKERS_OLLAMA = 1
 
     SYSTEM_PROMPT = (
         "Je bent een expert in sentimentanalyse voor Nederlandse teksten. "
@@ -416,9 +416,9 @@ def analyze_sentiments_dutch_ollama(
         )
 
     results: List[SentimentResult] = []
-    print(f"Starting Ollama sentiment analysis on {len(search_results)} items with {NUM_WORKERS} workers...")
+    print(f"Starting Ollama sentiment analysis on {len(search_results)} items with {NUM_WORKERS_OLLAMA} workers...")
 
-    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=NUM_WORKERS_OLLAMA) as executor:
         future_to_item = {
             executor.submit(process_single_sentiment, item): item
             for item in search_results
