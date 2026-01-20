@@ -18,7 +18,7 @@ from constants import (
     DOTENV_PATH,
     PROJECT_DIR,
 )
-from data_import import import_search_results, import_search_results_ndjson, normalize_unicode, strip_xml_tags
+from data_import import import_search_results, import_search_results_ndjson, normalize_unicode, remove_advertisements, strip_xml_tags
 from delpher_types import (
     EmbeddingModel,
     IndoAuthenticityResults,
@@ -73,10 +73,12 @@ def main() -> None:
 
         plain_text_search_results.append(search_result_with_plain_text)
 
+    plain_text_search_results_without_ads = remove_advertisements(plain_text_search_results)
+
     print()
-    sentiment_results_robbert = analyze_sentiments_robbert(plain_text_search_results)
-    sentiment_results_fietje = analyze_sentiments_dutch_fietje(plain_text_search_results)
-    sentiment_results_ollama = analyze_sentiments_dutch_ollama(plain_text_search_results)
+    sentiment_results_robbert = analyze_sentiments_robbert(plain_text_search_results_without_ads)
+    sentiment_results_fietje = analyze_sentiments_dutch_fietje(plain_text_search_results_without_ads)
+    sentiment_results_ollama = analyze_sentiments_dutch_ollama(plain_text_search_results_without_ads)
 
     robbert_json = [asdict(r) for r in sentiment_results_robbert]
     fietje_json = [asdict(r) for r in sentiment_results_fietje]

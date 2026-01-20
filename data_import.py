@@ -7,7 +7,7 @@ import unicodedata
 from pathlib import Path
 
 from constants import DUTCH_WORDS_FILE_PATH, ENGLISH_WORDS_FILE_PATH
-from delpher_types import OcredSearchResult
+from delpher_types import OcredSearchResult, PlainTextSearchResult
 from ftfy import fix_text
 
 
@@ -175,3 +175,12 @@ def data_dir_to_single_json_file(data_dir: str, out_file_path: str) -> None:
 
     with open(out_file_path, "w", encoding="utf-8") as out_file:
         out_file.write(out_value)
+
+def remove_advertisements(search_results: list[PlainTextSearchResult]) -> list[PlainTextSearchResult]:
+    search_results_without_ads = []
+
+    for search_result in search_results:
+        if not search_result.plain_text.startswith("Advertentie "):
+            search_results_without_ads.append(search_result)
+
+    return search_results_without_ads
