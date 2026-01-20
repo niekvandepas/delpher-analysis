@@ -7,7 +7,6 @@ from dotenv import load_dotenv
 
 from translation.translation import translate_texts_llama
 
-print(os.path.dirname(sys.executable))
 # ruff: noqa: E402 # Ignore import positioning for this file
 print("Importing libraries...")
 
