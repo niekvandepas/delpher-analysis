@@ -1,14 +1,17 @@
 from dataclasses import asdict
 import json
+import logging
 import os
 import sys
+
+logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(message)s")
 
 from dotenv import load_dotenv
 
 from translation.translation import translate_texts_llama
 
 # ruff: noqa: E402 # Ignore import positioning for this file
-print("Importing libraries...")
+logging.info("Importing libraries...")
 
 from typing import Any
 
@@ -41,23 +44,25 @@ from utils import time_function
 # - Is Dutch cuisine portrayed as boring as compared to Indo and Indonesian cuisines?
 # - To what extent is a pragmatic attitude to Dutch cuisine vs a ~culturalist, thick, identity and heritage-focused attitude to Indonesian food visible in the newspaper archives?
 def main() -> None:
+    logging.info("Loading dotenv")
     load_dotenv(DOTENV_PATH)
+
     DATA_IMPORT_LIMIT = os.environ.get("DATA_IMPORT_LIMIT")
     if not DATA_IMPORT_LIMIT:
-        print("Environment variable DATA_IMPORT_LIMIT not set, loading all data.")
+        logging.info("Environment variable DATA_IMPORT_LIMIT not set, loading all data.")
         DATA_IMPORT_LIMIT = None
     else:
-        print(f"Environment variable DATA_IMPORT_LIMIT set to {DATA_IMPORT_LIMIT}, limiting imported data.")
+        logging.info(f"Environment variable DATA_IMPORT_LIMIT set to {DATA_IMPORT_LIMIT}, limiting imported data.")
         DATA_IMPORT_LIMIT = int(DATA_IMPORT_LIMIT)
 
-    print("importing search results")
+    logging.info("Importing search results")
     search_results = import_search_results_ndjson(limit=DATA_IMPORT_LIMIT, path="data/dutch_and_food_terms_query_with_plain_texts.ndjson")
-    print("importing search results done")
+    logging.info("Importing search results done")
 
     plain_text_search_results: list[PlainTextSearchResult] = []
 
     for i, search_result in enumerate(search_results):
-        print(f"Processing search result #{i+1}", end="\r")
+        logging.info(f"Processing search result #{i+1}", end="\r")
         plain_text = normalize_unicode(strip_xml_tags(search_result.ocr_xml))
         search_result_with_plain_text = PlainTextSearchResult(
             publication_date=search_result.publication_date,
@@ -74,9 +79,11 @@ def main() -> None:
 
     plain_text_search_results_without_ads = remove_advertisements(plain_text_search_results)
 
-    print()
+    logging.info("Analyzing sentiments with RobBERT")
     sentiment_results_robbert = analyze_sentiments_robbert(plain_text_search_results_without_ads)
+    logging.info("Analyzing sentiments with fietje")
     sentiment_results_fietje = analyze_sentiments_dutch_fietje(plain_text_search_results_without_ads)
+    logging.info("Analyzing sentiments with ollama")
     sentiment_results_ollama = analyze_sentiments_dutch_ollama(plain_text_search_results_without_ads)
 
     robbert_json = [asdict(r) for r in sentiment_results_robbert]
@@ -87,6 +94,7 @@ def main() -> None:
     fietje_path = "output/fietje_sentiment.json"
     ollama_path = "output/ollama_sentiment.json"
 
+    logging.info("Writing sentiment analysis results to JSON files in output/")
     with open(robbert_path, "w", encoding="utf-8") as f:
         json.dump(robbert_json, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
