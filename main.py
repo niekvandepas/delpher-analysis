@@ -63,7 +63,7 @@ def main() -> None:
     plain_text_search_results: list[PlainTextSearchResult] = []
 
     for i, search_result in enumerate(search_results):
-        logging.info(f"Processing search result #{i+1}", end="\r")
+        logging.info(f"Processing search result #{i+1}")
         plain_text = normalize_unicode(strip_xml_tags(search_result.ocr_xml))
         search_result_with_plain_text = PlainTextSearchResult(
             publication_date=search_result.publication_date,
