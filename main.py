@@ -5,7 +5,7 @@ import logging
 import os
 import sys
 
-logging.basicConfig(level=logging.DEBUG, format="%(levelname)s: %(message)s")
+logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 from dotenv import load_dotenv
 
