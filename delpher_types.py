@@ -60,7 +60,7 @@ class SentimentResult():
     text: str
     identifier: str
     sentiment_label: SentimentLabel
-    sentiment_score: float
+    # sentiment_score: float
 
 @dataclass(frozen=True)
 class IndoAuthenticityResults():

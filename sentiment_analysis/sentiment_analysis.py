@@ -247,7 +247,7 @@ def analyze_sentiments_dutch_fietje(
         )
 
         try:
-            label, score = classify_sentiment_fietje(model, tokenizer, search_result.plain_text[:1500])
+            label = classify_sentiment_fietje(model, tokenizer, search_result.plain_text[:1500])
             if label == "POSITIEF":
                 normalized_label = SentimentLabel.POSITIVE
             elif label == "NEGATIEF":
@@ -259,7 +259,6 @@ def analyze_sentiments_dutch_fietje(
                 text=search_result.plain_text,
                 identifier=search_result.identifier or "",
                 sentiment_label=normalized_label,
-                sentiment_score=score,
             )
 
         except Exception as e:
@@ -268,7 +267,6 @@ def analyze_sentiments_dutch_fietje(
                 text=search_result.plain_text,
                 identifier=search_result.identifier or "",
                 sentiment_label=SentimentLabel.NEUTRAL,
-                sentiment_score=0.0,
             )
 
         end_time = time()
@@ -297,13 +295,13 @@ def analyze_sentiments_dutch_fietje(
     print(f"\nAnalysis complete. Processed {len(results)} items.")
     return results
 
-def classify_sentiment_fietje(model, tokenizer, text: str) -> tuple[str, float]:
+def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
     prompt = (
         "Je bent een sentimentanalyse-model. "
         "Classificeer de volgende tekst als POSITIEF, NEUTRAAL of NEGATIEF.\n\n"
         f"Tekst: \"{text}\"\n\n"
         "Antwoord exact in het volgende JSON-formaat:\n"
-        "{\"label\": \"POS/NEUTRAAL/NEG\", \"score\": 0.xx}\n"
+        "{\"label\": \"POSITIEF/NEUTRAAL/NEGATIEF\"}\n"
     )
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
@@ -323,16 +321,15 @@ def classify_sentiment_fietje(model, tokenizer, text: str) -> tuple[str, float]:
 
     match = re.search(r'\{.*\}', output_text, flags=re.DOTALL)
     if not match:
-        return "NEUTRAAL", 0.50
+        return "NEUTRAAL"
 
     try:
         data = json.loads(match.group(0))
         label = data.get("label", "NEUTRAAL")
-        score = float(data.get("score", 0.50))
     except Exception:
-        return "NEUTRAAL", 0.50
+        return "NEUTRAAL"
 
-    return label.upper(), score
+    return label.upper()
 
 def analyze_sentiments_dutch_ollama(
     search_results: List[PlainTextSearchResult]
@@ -354,10 +351,9 @@ def analyze_sentiments_dutch_ollama(
     SYSTEM_PROMPT = (
         "Je bent een expert in sentimentanalyse voor Nederlandse teksten. "
         "Je taak is om het sentiment van de gegeven tekst te bepalen. "
-        "De mogelijke categorieën zijn: POSITIVE, NEGATIVE, of NEUTRAL. "
-        "Geef ook een zekerheidsscore (confidence score) tussen 0.0 en 1.0. "
+        "De mogelijke categorieën zijn: POSITIEF, NEGATIEF of NEUTRAAL "
         "Antwoord UITSLUITEND met een JSON-object in het volgende formaat: "
-        "{\"label\": \"POSITIVE\", \"score\": 0.95}. "
+        "{\"label\": \"POSITIEF\"}. "
         "Geen andere tekst of uitleg."
     )
 
@@ -390,7 +386,6 @@ def analyze_sentiments_dutch_ollama(
             data = json.loads(content)
 
             raw_label = data.get("label", "NEUTRAL").upper()
-            score = float(data.get("score", 0.5))
 
             if "POS" in raw_label:
                 label = SentimentLabel.POSITIVE
@@ -403,7 +398,6 @@ def analyze_sentiments_dutch_ollama(
             # Fallback to neutral on error
             print(f"Error analyzing item {item.identifier}: {e}")
             label = SentimentLabel.NEUTRAL
-            score = 0.0
 
         end_time = time()
         print(f"Processed item {item.identifier} in {end_time - start_time:.2f} seconds.")
@@ -412,7 +406,6 @@ def analyze_sentiments_dutch_ollama(
             text=item.plain_text,
             identifier=item.identifier or "",
             sentiment_label=label,
-            sentiment_score=score
         )
 
     results: List[SentimentResult] = []
