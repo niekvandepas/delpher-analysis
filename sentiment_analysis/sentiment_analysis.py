@@ -56,7 +56,6 @@ def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[Senti
                 text=search_result.plain_text,
                 identifier=search_result.identifier or "",
                 sentiment_label=normalized_label,
-                sentiment_score=output["score"],
             )
 
         except Exception as e:
@@ -65,7 +64,6 @@ def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[Senti
                 text=search_result.plain_text,
                 identifier=search_result.identifier or "",
                 sentiment_label=SentimentLabel.NEUTRAL,
-                sentiment_score=0.0,
             )
 
         end_time = time()
