@@ -87,9 +87,9 @@ def main() -> None:
     logging.info("Analyzing sentiments with ollama")
     sentiment_results_ollama = analyze_sentiments_dutch_ollama(plain_text_search_results_without_ads)
 
-    robbert_json = [asdict(r) for r in sentiment_results_robbert]
-    fietje_json = [asdict(r) for r in sentiment_results_fietje]
-    ollama_json = [asdict(r) for r in sentiment_results_ollama]
+    robbert_dict = [asdict(r) for r in sentiment_results_robbert]
+    fietje_dict = [asdict(r) for r in sentiment_results_fietje]
+    ollama_dict = [asdict(r) for r in sentiment_results_ollama]
 
     robbert_path = "output/robbert_sentiment.json"
     fietje_path = "output/fietje_sentiment.json"
@@ -97,13 +97,13 @@ def main() -> None:
 
     logging.info("Writing sentiment analysis results to JSON files in output/")
     with open(robbert_path, "w", encoding="utf-8") as f:
-        json.dump(robbert_json, f, ensure_ascii=False, indent=2, default=enum_serializer)
+        json.dump(robbert_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
     with open(fietje_path, "w", encoding="utf-8") as f:
-        json.dump(fietje_json, f, ensure_ascii=False, indent=2, default=enum_serializer)
+        json.dump(fietje_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
     with open(ollama_path, "w", encoding="utf-8") as f:
-        json.dump(ollama_json, f, ensure_ascii=False, indent=2, default=enum_serializer)
+        json.dump(ollama_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
     ...
 
