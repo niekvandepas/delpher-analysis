@@ -320,13 +320,10 @@ def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
 
     match = re.search(r'\{.*\}', output_text, flags=re.DOTALL)
     if not match:
-        return "NEUTRAAL"
+        raise ValueError("No JSON object found in model output.")
 
-    try:
-        data = json.loads(match.group(0))
-        label = data.get("label", "NEUTRAAL")
-    except Exception:
-        return "NEUTRAAL"
+    data = json.loads(match.group(0))
+    label = data.get("label", "NEUTRAAL")
 
     return label.upper()
 
