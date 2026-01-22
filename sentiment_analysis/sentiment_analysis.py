@@ -315,7 +315,6 @@ def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
     output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
     # Extract JSON from the tail of the output
-    # We keep this simple and robust
     import json
     import re
 
