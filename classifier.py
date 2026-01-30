@@ -3,6 +3,7 @@
 import json
 import os
 from pathlib import Path
+from time import time
 from transformers import pipeline
 import ollama
 from delpher_types import DistilbertClassificationResult, OllamaClassificationResult, PlainTextSearchResult, TranslatedSearchResult  # type: ignore
@@ -65,10 +66,15 @@ def classify_articles_dutch(
     client = ollama.Client()
 
     for i, original_text in enumerate(texts):
+        start_time = time.time()
+
         category = classify_text_with_ollama(client, original_text.plain_text)
         result = OllamaClassificationResult(
             text=original_text.plain_text, label=category
         )
+
+        end_time = time.time()
+        print(f"Processed article #{i}: {category} in {end_time - start_time:.2f}")
 
         results.append(result)
 
