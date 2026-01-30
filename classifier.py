@@ -3,7 +3,7 @@
 import json
 import os
 from pathlib import Path
-from time import time
+import time
 from transformers import pipeline
 import ollama
 from delpher_types import DistilbertClassificationResult, OllamaClassificationResult, PlainTextSearchResult, TranslatedSearchResult  # type: ignore
