@@ -24,9 +24,11 @@ from constants import (
 )
 from data_import import import_search_results, import_search_results_ndjson, normalize_unicode, remove_advertisements, strip_xml_tags
 from delpher_types import (
+    DistilbertClassificationResult,
     EmbeddingModel,
     IndoAuthenticityResults,
     OcredSearchResult,
+    OllamaClassificationResult,
     PlainTextSearchResult,
     TranslatedSearchResult,
     enum_serializer,
@@ -129,7 +131,7 @@ def indifference(texts: list[TranslatedSearchResult]) -> Any:
     return sentiment_results
 
 
-def technocratism(english_texts: list[TranslatedSearchResult]) -> list[dict]:
+def technocratism(english_texts: list[TranslatedSearchResult]) -> list[DistilbertClassificationResult] | list[OllamaClassificationResult]:
     print("Running technocratism tests...")
     # technocratic tendencies, which is explored through topic modeling or classification to test if most articles focus on sustainability, health, and economics;
 
