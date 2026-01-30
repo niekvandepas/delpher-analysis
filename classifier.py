@@ -65,6 +65,8 @@ def classify_articles_dutch(
 
     client = ollama.Client()
 
+    total_start_time = time.time()
+
     for i, original_text in enumerate(texts):
         start_time = time.time()
 
@@ -80,6 +82,8 @@ def classify_articles_dutch(
 
         results.append(result)
 
+    total_end_time = time.time()
+    print(f"Processed {len(texts)} articles in {total_end_time - total_start_time} seconds")
     return results
 
 
