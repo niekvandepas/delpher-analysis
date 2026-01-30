@@ -14,7 +14,7 @@ classifier = pipeline(
 
 candidate_labels = ["sustainability", "health", "economics"]
 
-def classify_articles(english_texts: list[TranslatedSearchResult]) -> list[dict]:
+def classify_articles_english(english_texts: list[TranslatedSearchResult]) -> list[dict]:
     results = []
     # https://huggingface.co/typeform/distilbert-base-uncased-mnli/blame/b91e7a74c63c287d22a105a9f050cd26d648879f/config.json
     max_tokens = 512
