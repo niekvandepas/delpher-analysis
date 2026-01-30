@@ -73,7 +73,7 @@ class EmbeddingModel(Enum):
     SENTENCE_TRANSFORMER = 3
 
 @dataclass(frozen=True)
-class ClassificationResult:
+class DistilbertClassificationResult:
     translated_text: str
     label: str
     score: float

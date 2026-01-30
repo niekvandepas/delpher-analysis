@@ -3,8 +3,8 @@
 import json
 from pathlib import Path
 from transformers import pipeline
-
-from delpher_types import ClassificationResult, TranslatedSearchResult  # type: ignore
+import ollama
+from delpher_types import DistilbertClassificationResult, TranslatedSearchResult  # type: ignore
 
 classifier = pipeline(
     "zero-shot-classification",
@@ -13,10 +13,10 @@ classifier = pipeline(
 )
 
 
-def classify_articles_english(english_texts: list[TranslatedSearchResult]) -> list[ClassificationResult]:
+def classify_articles_english(english_texts: list[TranslatedSearchResult]) -> list[DistilbertClassificationResult]:
     candidate_labels = ["sustainability", "health", "economics"]
 
-    results: list[ClassificationResult] = []
+    results: list[DistilbertClassificationResult] = []
     # https://huggingface.co/typeform/distilbert-base-uncased-mnli/blame/b91e7a74c63c287d22a105a9f050cd26d648879f/config.json
     max_tokens = 512
 
@@ -29,7 +29,7 @@ def classify_articles_english(english_texts: list[TranslatedSearchResult]) -> li
       score = classification["scores"][0]
 
       results.append(
-        ClassificationResult(
+        DistilbertClassificationResult(
             translated_text=text,
             label=label, # type: ignore
             score=score, # type: ignore
