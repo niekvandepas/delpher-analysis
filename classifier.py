@@ -74,7 +74,9 @@ def classify_articles_dutch(
         )
 
         end_time = time.time()
-        print(f"Processed article #{i}: {category} in {end_time - start_time:.2f} seconds")
+        print(
+            f"Processed article #{i}: {category} in {end_time - start_time:.2f} seconds"
+        )
 
         results.append(result)
 
