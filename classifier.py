@@ -4,7 +4,7 @@ import json
 from pathlib import Path
 from transformers import pipeline
 
-from delpher_types import TranslatedSearchResult  # type: ignore
+from delpher_types import ClassificationResult, TranslatedSearchResult  # type: ignore
 
 classifier = pipeline(
     "zero-shot-classification",
@@ -13,10 +13,10 @@ classifier = pipeline(
 )
 
 
-def classify_articles_english(english_texts: list[TranslatedSearchResult]) -> list[dict]:
+def classify_articles_english(english_texts: list[TranslatedSearchResult]) -> list[ClassificationResult]:
     candidate_labels = ["sustainability", "health", "economics"]
 
-    results = []
+    results: list[ClassificationResult] = []
     # https://huggingface.co/typeform/distilbert-base-uncased-mnli/blame/b91e7a74c63c287d22a105a9f050cd26d648879f/config.json
     max_tokens = 512
 
@@ -28,11 +28,13 @@ def classify_articles_english(english_texts: list[TranslatedSearchResult]) -> li
       label = classification["labels"][0]
       score = classification["scores"][0]
 
-      results.append({
-          "translated_text": text,
-          "label": label,
-          "score": score
-      })
+      results.append(
+        ClassificationResult(
+            translated_text=text,
+            label=label, # type: ignore
+            score=score, # type: ignore
+        )
+      )
 
       print(f"Processed article #{i}: {label} ({score:.2f})", end="\r")
 

@@ -71,3 +71,9 @@ class EmbeddingModel(Enum):
     WORD2VEC = 1
     FASTTEXT = 2
     SENTENCE_TRANSFORMER = 3
+
+@dataclass(frozen=True)
+class ClassificationResult:
+    translated_text: str
+    label: str
+    score: float
