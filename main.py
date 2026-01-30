@@ -16,7 +16,7 @@ logging.info("Importing libraries...")
 
 from typing import Any
 
-from classifier import classify_articles_english
+from classifier import classify_articles_dutch, classify_articles_english
 from co_occurence import document_co_occurence
 from constants import (
     DOTENV_PATH,
@@ -82,7 +82,7 @@ def main() -> None:
 
     plain_text_search_results_without_ads = remove_advertisements(plain_text_search_results)
 
-    sentiment_analysis(plain_text_search_results_without_ads)
+    # sentiment_analysis(plain_text_search_results_without_ads)
     technocratism(plain_text_search_results_without_ads)
 
 
@@ -131,11 +131,12 @@ def indifference(texts: list[TranslatedSearchResult]) -> Any:
     return sentiment_results
 
 
-def technocratism(english_texts: list[TranslatedSearchResult]) -> list[DistilbertClassificationResult] | list[OllamaClassificationResult]:
+def technocratism(texts: list[PlainTextSearchResult]) -> list[DistilbertClassificationResult] | list[OllamaClassificationResult]:
     print("Running technocratism tests...")
     # technocratic tendencies, which is explored through topic modeling or classification to test if most articles focus on sustainability, health, and economics;
 
-    return classify_articles_english(english_texts)
+    # return classify_articles_english(translated_texts)
+    return classify_articles_dutch(texts)
 
 
 def semantic_search(texts: list[str], query_words: list[str], model: str) -> Any:

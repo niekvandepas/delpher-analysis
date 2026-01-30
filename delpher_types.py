@@ -77,3 +77,8 @@ class DistilbertClassificationResult:
     translated_text: str
     label: str
     score: float
+
+@dataclass(frozen=True)
+class OllamaClassificationResult:
+    text: str
+    label: str
