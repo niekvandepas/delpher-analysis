@@ -4,7 +4,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(ROOT))
 
-from constants import FIETJE_SENTIMENT_RESULTS_PATH, ROBBERT_SENTIMENT_RESULTS_PATH
+from constants import FIETJE_SENTIMENT_RESULTS_PATH, OLLAMA_SENTIMENT_RESULTS_PATH, ROBBERT_SENTIMENT_RESULTS_PATH
 import json
 from typing import TypedDict
 from sklearn.metrics import classification_report, confusion_matrix
@@ -13,19 +13,23 @@ import curses
 
 from delpher_types import SentimentResult
 
-SentimentResults = TypedDict('SentimentResults', {'robbert': list[SentimentResult], 'fietje': list[SentimentResult]})
+SentimentResults = TypedDict('SentimentResults', {'robbert': list[SentimentResult], 'fietje': list[SentimentResult], 'ollama': list[SentimentResult]})
 
 def get_evaluation_results() -> SentimentResults:
-    """Loads sentiment results from both models."""
+    """Loads sentiment results from all three models."""
     with open(FIETJE_SENTIMENT_RESULTS_PATH, "r") as f:
         fietje_results = json.load(f)
 
     with open(ROBBERT_SENTIMENT_RESULTS_PATH, "r") as f:
         robbert_results = json.load(f)
 
+    with open(OLLAMA_SENTIMENT_RESULTS_PATH, "r") as f:
+        ollama_results = json.load(f)
+
     return {
         'fietje': fietje_results,
-        'robbert': robbert_results
+        'robbert': robbert_results,
+        'ollama': ollama_results,
     }
 
 def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
