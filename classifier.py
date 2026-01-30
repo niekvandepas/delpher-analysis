@@ -66,13 +66,13 @@ def classify_articles_dutch(texts: list[PlainTextSearchResult]) -> list[OllamaCl
     client = ollama.Client()
 
     for i, original_text in enumerate(texts):
-       category = classify_text_with_ollama(client, original_text.plain_text)
-       result = OllamaClassificationResult(
+        category = classify_text_with_ollama(client, original_text.plain_text)
+        result = OllamaClassificationResult(
             text=original_text.plain_text,
             label=category
-       )
+        )
 
-       results.append(result)
+        results.append(result)
 
     return results
 
