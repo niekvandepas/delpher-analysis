@@ -80,12 +80,16 @@ def main() -> None:
 
     plain_text_search_results_without_ads = remove_advertisements(plain_text_search_results)
 
+    sentiment_analysis(plain_text_search_results_without_ads)
+
+
+def sentiment_analysis(texts: list[PlainTextSearchResult]):
     logging.info("Analyzing sentiments with RobBERT")
-    sentiment_results_robbert = analyze_sentiments_robbert(plain_text_search_results_without_ads)
+    sentiment_results_robbert = analyze_sentiments_robbert(texts)
     logging.info("Analyzing sentiments with fietje")
-    sentiment_results_fietje = analyze_sentiments_dutch_fietje(plain_text_search_results_without_ads)
+    sentiment_results_fietje = analyze_sentiments_dutch_fietje(texts)
     logging.info("Analyzing sentiments with ollama")
-    sentiment_results_ollama = analyze_sentiments_dutch_ollama(plain_text_search_results_without_ads)
+    sentiment_results_ollama = analyze_sentiments_dutch_ollama(texts)
 
     robbert_dict = [asdict(r) for r in sentiment_results_robbert]
     fietje_dict = [asdict(r) for r in sentiment_results_fietje]
