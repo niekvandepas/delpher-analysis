@@ -31,7 +31,7 @@ TRANSLATED_TEXTS_FILE_PATH = f"{PROJECT_DIR}/data/translated_texts.json"
 SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH = (
     f"{PROJECT_DIR}/data/search_results_with_plain_texts.json"
 )
-DOTENV_PATH =f"{PROJECT_DIR}/.env"
+DOTENV_PATH = f"{PROJECT_DIR}/.env"
 
 DUTCH_WORDS_FILE_PATH = f"{PROJECT_DIR}/data/dutch_words.txt"
 ENGLISH_WORDS_FILE_PATH = f"{PROJECT_DIR}/data/english_words.txt"
