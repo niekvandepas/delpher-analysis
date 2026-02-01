@@ -39,3 +39,5 @@ ENGLISH_WORDS_FILE_PATH = f"{PROJECT_DIR}/data/english_words.txt"
 FIETJE_SENTIMENT_RESULTS_PATH = f"{PROJECT_DIR}/output/fietje_sentiment.json"
 ROBBERT_SENTIMENT_RESULTS_PATH = f"{PROJECT_DIR}/output/robbert_sentiment.json"
 OLLAMA_SENTIMENT_RESULTS_PATH = f"{PROJECT_DIR}/output/ollama_sentiment.json"
+
+ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH = f"{PROJECT_DIR}/output/article_topics.json"

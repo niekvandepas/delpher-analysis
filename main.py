@@ -22,6 +22,7 @@ from classification.article_topic_classification import (
 )
 from co_occurence import document_co_occurence
 from constants import (
+    ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH,
     DOTENV_PATH,
     PROJECT_DIR,
 )
@@ -107,7 +108,17 @@ def main() -> None:
     )
 
     # sentiment_analysis(plain_text_search_results_without_ads)
-    technocratism(plain_text_search_results_without_ads)
+    classification_results = technocratism(plain_text_search_results_without_ads)
+
+    with open(ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH, "r") as f:
+        classification_results_dict = [asdict(r) for r in classification_results]
+        json.dump(
+            classification_results_dict,
+            f,
+            ensure_ascii=False,
+            indent=2,
+            default=enum_serializer,
+        )
 
 
 def sentiment_analysis(texts: list[PlainTextSearchResult]):
