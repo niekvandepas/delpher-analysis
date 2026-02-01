@@ -16,7 +16,10 @@ logging.info("Importing libraries...")
 
 from typing import Any
 
-from classifier import classify_articles_dutch, classify_articles_english
+from classification.article_topic_classification import (
+    classify_articles_dutch,
+    classify_articles_english,
+)
 from co_occurence import document_co_occurence
 from constants import (
     DOTENV_PATH,
