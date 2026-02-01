@@ -22,7 +22,13 @@ from constants import (
     DOTENV_PATH,
     PROJECT_DIR,
 )
-from data_import import import_search_results, import_search_results_ndjson, normalize_unicode, remove_advertisements, strip_xml_tags
+from data_import import (
+    import_search_results,
+    import_search_results_ndjson,
+    normalize_unicode,
+    remove_advertisements,
+    strip_xml_tags,
+)
 from delpher_types import (
     DistilbertClassificationResult,
     EmbeddingModel,
@@ -40,9 +46,15 @@ from embeddings import (
     train_sentence_transformer_model,
     train_word2vec_model,
 )
-from sentiment_analysis.sentiment_analysis import analyze_sentiments_dutch_ollama, analyze_sentiments_robbert, analyze_sentiments_dutch_fietje, analyze_sentiments_english
+from sentiment_analysis.sentiment_analysis import (
+    analyze_sentiments_dutch_ollama,
+    analyze_sentiments_robbert,
+    analyze_sentiments_dutch_fietje,
+    analyze_sentiments_english,
+)
 from topic_modelling import run_bertopic
 from utils import time_function
+
 
 # - Is Dutch cuisine portrayed as boring as compared to Indo and Indonesian cuisines?
 # - To what extent is a pragmatic attitude to Dutch cuisine vs a ~culturalist, thick, identity and heritage-focused attitude to Indonesian food visible in the newspaper archives?
@@ -52,14 +64,21 @@ def main() -> None:
 
     DATA_IMPORT_LIMIT = os.environ.get("DATA_IMPORT_LIMIT")
     if not DATA_IMPORT_LIMIT:
-        logging.info("Environment variable DATA_IMPORT_LIMIT not set, loading all data.")
+        logging.info(
+            "Environment variable DATA_IMPORT_LIMIT not set, loading all data."
+        )
         DATA_IMPORT_LIMIT = None
     else:
-        logging.info(f"Environment variable DATA_IMPORT_LIMIT set to {DATA_IMPORT_LIMIT}, limiting imported data.")
+        logging.info(
+            f"Environment variable DATA_IMPORT_LIMIT set to {DATA_IMPORT_LIMIT}, limiting imported data."
+        )
         DATA_IMPORT_LIMIT = int(DATA_IMPORT_LIMIT)
 
     logging.info("Importing search results")
-    search_results = import_search_results_ndjson(limit=DATA_IMPORT_LIMIT, path="data/dutch_and_food_terms_query_with_plain_texts.ndjson")
+    search_results = import_search_results_ndjson(
+        limit=DATA_IMPORT_LIMIT,
+        path="data/dutch_and_food_terms_query_with_plain_texts.ndjson",
+    )
     logging.info("Importing search results done")
 
     plain_text_search_results: list[PlainTextSearchResult] = []
@@ -80,7 +99,9 @@ def main() -> None:
 
         plain_text_search_results.append(search_result_with_plain_text)
 
-    plain_text_search_results_without_ads = remove_advertisements(plain_text_search_results)
+    plain_text_search_results_without_ads = remove_advertisements(
+        plain_text_search_results
+    )
 
     # sentiment_analysis(plain_text_search_results_without_ads)
     technocratism(plain_text_search_results_without_ads)
@@ -104,7 +125,9 @@ def sentiment_analysis(texts: list[PlainTextSearchResult]):
 
     logging.info("Writing sentiment analysis results to JSON files in output/")
     with open(robbert_path, "w", encoding="utf-8") as f:
-        json.dump(robbert_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
+        json.dump(
+            robbert_dict, f, ensure_ascii=False, indent=2, default=enum_serializer
+        )
 
     with open(fietje_path, "w", encoding="utf-8") as f:
         json.dump(fietje_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
@@ -113,6 +136,7 @@ def sentiment_analysis(texts: list[PlainTextSearchResult]):
         json.dump(ollama_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
     ...
+
 
 def assign_document_topics(
     data: list[OcredSearchResult],
@@ -131,7 +155,9 @@ def indifference(texts: list[TranslatedSearchResult]) -> Any:
     return sentiment_results
 
 
-def technocratism(texts: list[PlainTextSearchResult]) -> list[DistilbertClassificationResult] | list[OllamaClassificationResult]:
+def technocratism(
+    texts: list[PlainTextSearchResult],
+) -> list[DistilbertClassificationResult] | list[OllamaClassificationResult]:
     print("Running technocratism tests...")
     # technocratic tendencies, which is explored through topic modeling or classification to test if most articles focus on sustainability, health, and economics;
 
