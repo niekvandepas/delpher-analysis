@@ -110,7 +110,7 @@ def main() -> None:
     # sentiment_analysis(plain_text_search_results_without_ads)
     classification_results = technocratism(plain_text_search_results_without_ads)
 
-    with open(ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH, "r") as f:
+    with open(ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH, "w") as f:
         classification_results_dict = [asdict(r) for r in classification_results]
         json.dump(
             classification_results_dict,
