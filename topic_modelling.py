@@ -36,15 +36,15 @@ def run_bertopic(texts: list[str]) -> dict[int, list[tuple[str, float]]]:
     # topics, _ = model.transform(texts)
     topics = model.get_topics()
 
-    result: list[tuple[str, int, list[str]]] = []
+    results: list[tuple[str, int, list[str]]] = []
 
     for text, topic_num in zip(texts, topics):
         if topic_num == -1:
-            result.append((text, -1, []))
+            results.append((text, -1, []))
             continue
 
         topic_words = model.get_topic(topic_num)
         words = [w for w, _ in topic_words] if topic_words else []
-        result.append((text, topic_num, words))
+        results.append((text, topic_num, words))
 
-    return result
+    return results
