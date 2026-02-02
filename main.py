@@ -110,13 +110,13 @@ def main() -> None:
     )
 
     # sentiment_analysis(plain_text_search_results_without_ads)
+
     classification_results = classify_articles(plain_text_search_results_without_ads)
     save_classification_results(classification_results)
 
     bertopic_results = run_bertopic(
         [r.plain_text for r in plain_text_search_results_without_ads]
     )
-
     save_bertopic_results(bertopic_results)
 
 
