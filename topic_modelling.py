@@ -5,6 +5,7 @@ from utils import time_function
 from umap import UMAP  # type: ignore
 import os
 
+
 def create_bertopic_model(texts: list[str]) -> BERTopic:
     topic_model = BERTopic(language="dutch")
     topics, probs = time_function(topic_model.fit_transform, texts)
