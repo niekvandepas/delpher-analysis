@@ -92,3 +92,15 @@ class DistilbertClassificationResult:
 class OllamaClassificationResult:
     text: str
     label: str
+
+
+@dataclass
+class TopicInfo:
+    topic_num: int
+    topic_words: list[str]
+
+
+@dataclass(frozen=True)
+class BertopicResult:
+    text: str
+    topic_info: TopicInfo

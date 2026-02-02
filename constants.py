@@ -42,3 +42,4 @@ OLLAMA_SENTIMENT_RESULTS_PATH = f"{PROJECT_DIR}/output/ollama_sentiment.json"
 
 ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH = f"{PROJECT_DIR}/output/article_topics.json"
 BERTOPIC_MODEL_PATH = f"{PROJECT_DIR}/models/bertopic_model"
+BERTOPIC_RESULTS_PATH = f"{PROJECT_DIR}/output/bertopic_results.json"

@@ -23,6 +23,7 @@ from classification.article_topic_classification import (
 from co_occurence import document_co_occurence
 from constants import (
     ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH,
+    BERTOPIC_RESULTS_PATH,
     DOTENV_PATH,
     PROJECT_DIR,
 )
@@ -108,17 +109,30 @@ def main() -> None:
     )
 
     # sentiment_analysis(plain_text_search_results_without_ads)
-    classification_results = classify_articles(plain_text_search_results_without_ads)
+    # classification_results = classify_articles(plain_text_search_results_without_ads)
+    bertopic_results = run_bertopic(
+        [r.plain_text for r in plain_text_search_results_without_ads]
+    )
 
-    with open(ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH, "w") as f:
-        classification_results_dict = [asdict(r) for r in classification_results]
+    with open(BERTOPIC_RESULTS_PATH, "w") as f:
+        results_dict = [asdict(r) for r in bertopic_results]
         json.dump(
-            classification_results_dict,
+            results_dict,
             f,
             ensure_ascii=False,
             indent=2,
             default=enum_serializer,
         )
+
+    # with open(ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH, "w") as f:
+    #     classification_results_dict = [asdict(r) for r in classification_results]
+    #     json.dump(
+    #         classification_results_dict,
+    #         f,
+    #         ensure_ascii=False,
+    #         indent=2,
+    #         default=enum_serializer,
+    #     )
 
 
 def sentiment_analysis(texts: list[PlainTextSearchResult]):
