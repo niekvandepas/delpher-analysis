@@ -103,8 +103,6 @@ df = pd.DataFrame(
     ]
 )
 
-# ---- Sampling (balanced across predicted classes) ----
-
 samples = []
 for category in CATEGORIES:
     subset = df[df["predicted_category"] == category]
