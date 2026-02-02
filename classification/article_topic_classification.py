@@ -26,7 +26,7 @@ def classify_articles_dutch(
     EXAMPLE_CATEGORY_2 = "Traditie"
 
     CLASSIFICATION_SYSTEM_PROMPT = f"""
-    Je bent een tekstclassificatiesysteem. Je taak is om de tekst van de gebruiker te classificeren in één van de volgende twee categorieën: [Duurzaamheid], [Gezondheid], [Economie], [Smaak], [Traditie].
+    Je bent een tekstclassificatiesysteem. Je taak is om de tekst van de gebruiker te classificeren in één van de volgende categorieën: [Duurzaamheid], [Gezondheid], [Economie], [Smaak], [Traditie], [Overig].
 
     Je MOET UITSLUITEND de naam van de categorie outputten. En niets anders.
     Voeg geen extra tekst, uitleg, toelichting of leestekens toe.

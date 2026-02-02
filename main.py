@@ -35,6 +35,7 @@ from data_import import (
     strip_xml_tags,
 )
 from delpher_types import (
+    BertopicResult,
     DistilbertClassificationResult,
     EmbeddingModel,
     IndoAuthenticityResults,
@@ -109,30 +110,14 @@ def main() -> None:
     )
 
     # sentiment_analysis(plain_text_search_results_without_ads)
-    # classification_results = classify_articles(plain_text_search_results_without_ads)
+    classification_results = classify_articles(plain_text_search_results_without_ads)
+    save_classification_results(classification_results)
+
     bertopic_results = run_bertopic(
         [r.plain_text for r in plain_text_search_results_without_ads]
     )
 
-    with open(BERTOPIC_RESULTS_PATH, "w") as f:
-        results_dict = [asdict(r) for r in bertopic_results]
-        json.dump(
-            results_dict,
-            f,
-            ensure_ascii=False,
-            indent=2,
-            default=enum_serializer,
-        )
-
-    # with open(ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH, "w") as f:
-    #     classification_results_dict = [asdict(r) for r in classification_results]
-    #     json.dump(
-    #         classification_results_dict,
-    #         f,
-    #         ensure_ascii=False,
-    #         indent=2,
-    #         default=enum_serializer,
-    #     )
+    save_bertopic_results(bertopic_results)
 
 
 def sentiment_analysis(texts: list[PlainTextSearchResult]):
@@ -267,6 +252,34 @@ def get_most_similar_words(
     elif embedding_model == EmbeddingModel.SENTENCE_TRANSFORMER:
         raise ValueError(
             "Sentence transformers cannot be used to get most similar words."
+        )
+
+
+def save_classification_results(
+    classification_results: (
+        list[DistilbertClassificationResult] | list[OllamaClassificationResult]
+    ),
+) -> None:
+    with open(ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH, "w") as f:
+        classification_results_dict = [asdict(r) for r in classification_results]
+        json.dump(
+            classification_results_dict,
+            f,
+            ensure_ascii=False,
+            indent=2,
+            default=enum_serializer,
+        )
+
+
+def save_bertopic_results(bertopic_results: list[BertopicResult]) -> None:
+    with open(BERTOPIC_RESULTS_PATH, "w") as f:
+        results_dict = [asdict(r) for r in bertopic_results]
+        json.dump(
+            results_dict,
+            f,
+            ensure_ascii=False,
+            indent=2,
+            default=enum_serializer,
         )
 
 
