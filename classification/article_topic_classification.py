@@ -16,7 +16,6 @@ classifier = pipeline(
 def classify_articles_dutch(
     texts: list[PlainTextSearchResult],
 ) -> list[OllamaClassificationResult]:
-    # TODO get model name from environment
     MODEL_NAME = os.environ.get("OLLAMA_CLASSIFICATION_MODEL")
     if not MODEL_NAME:
         raise ValueError("Environment variable OLLAMA_CLASSIFICATION_MODEL not set.")
