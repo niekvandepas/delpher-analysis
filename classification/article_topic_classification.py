@@ -4,7 +4,7 @@ import json
 import os
 from pathlib import Path
 import time
-from transformers import pipeline
+from transformers import pipeline  # type: ignore
 import ollama
 from delpher_types import DistilbertClassificationResult, OllamaClassificationResult, PlainTextSearchResult, TranslatedSearchResult  # type: ignore
 
@@ -83,7 +83,9 @@ def classify_articles_dutch(
         results.append(result)
 
     total_end_time = time.time()
-    print(f"Processed {len(texts)} articles in {total_end_time - total_start_time} seconds")
+    print(
+        f"Processed {len(texts)} articles in {total_end_time - total_start_time} seconds"
+    )
     return results
 
 
@@ -101,8 +103,8 @@ def classify_articles_english(
 
         truncated_text = " ".join(text.split()[:max_tokens])
         classification = classifier(truncated_text, candidate_labels)
-        label = classification["labels"][0]
-        score = classification["scores"][0]
+        label = classification["labels"][0]  # type: ignore
+        score = classification["scores"][0]  # type: ignore
 
         results.append(
             DistilbertClassificationResult(
