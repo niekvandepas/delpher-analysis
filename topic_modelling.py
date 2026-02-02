@@ -1,14 +1,11 @@
 from bertopic import BERTopic  # type: ignore
+from constants import BERTOPIC_MODEL_PATH
 from data_import import import_plain_texts
 from delpher_types import OcredSearchResult
 from utils import time_function
 from umap import UMAP  # type: ignore
 from sklearn.datasets import fetch_20newsgroups  # type: ignore
 import os
-
-SCRIPT_DIR = os.path.dirname(__file__)
-MODEL_PATH = f"{SCRIPT_DIR}/models/bertopic_model"
-
 
 def create_bertopic_model(texts: list[str]) -> BERTopic:
     topic_model = BERTopic(language="dutch")
@@ -31,11 +28,11 @@ def get_bertopic_topics_dict(bertopic_model: "BERTopic", topics: list[int]) -> d
 
 # TODO this function SHOULD return a docs->topics dict
 def run_bertopic(texts: list[str]) -> dict[int, list[tuple[str, float]]]:
-    if os.path.exists(MODEL_PATH):
-        model = BERTopic.load(MODEL_PATH)
+    if os.path.exists(BERTOPIC_MODEL_PATH):
+        model = BERTopic.load(BERTOPIC_MODEL_PATH)
     else:
         model = create_bertopic_model(texts)
-        model.save(MODEL_PATH)
+        model.save(BERTOPIC_MODEL_PATH)
     # topics, _ = model.transform(texts)
     topics = model.get_topics()
 
