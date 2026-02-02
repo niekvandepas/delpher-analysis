@@ -36,8 +36,6 @@ def run_bertopic(texts: list[str]) -> dict[int, list[tuple[str, float]]]:
     # topics, _ = model.transform(texts)
     topics = model.get_topics()
 
-    result: list[tuple[str, list[str]]] = []
-
     result: list[tuple[str, int, list[str]]] = []
 
     for text, topic_num in zip(texts, topics):
