@@ -1,10 +1,8 @@
 from bertopic import BERTopic  # type: ignore
 from constants import BERTOPIC_MODEL_PATH
-from data_import import import_plain_texts
 from delpher_types import OcredSearchResult
 from utils import time_function
 from umap import UMAP  # type: ignore
-from sklearn.datasets import fetch_20newsgroups  # type: ignore
 import os
 
 def create_bertopic_model(texts: list[str]) -> BERTopic:
