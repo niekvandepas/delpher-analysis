@@ -30,18 +30,22 @@ class SearchResult:
 class OcredSearchResult(SearchResult):
     ocr_xml: str
 
+
 @dataclass(frozen=True)
 class PlainTextSearchResult(OcredSearchResult):
     plain_text: str
+
 
 @dataclass(frozen=True)
 class TranslatedSearchResult(PlainTextSearchResult):
     english_translated_text: str
 
+
 @dataclass(frozen=True)
 class LabeledSearchResult(OcredSearchResult):
     is_about_indonesia: bool
     snippet: str
+
 
 def enum_serializer(obj):
     """Converts Enum objects to their string value for JSON serialization."""
@@ -50,33 +54,39 @@ def enum_serializer(obj):
     # Optional: If you have other non-serializable types, handle them here
     raise TypeError(f"Object of type {type(obj).__name__} is not JSON serializable")
 
+
 class SentimentLabel(Enum):
     POSITIVE = "POSITIVE"
     NEGATIVE = "NEGATIVE"
     NEUTRAL = "NEUTRAL"
 
+
 @dataclass(frozen=True)
-class SentimentResult():
+class SentimentResult:
     text: str
     identifier: str
     sentiment_label: SentimentLabel
     # sentiment_score: float
 
+
 @dataclass(frozen=True)
-class IndoAuthenticityResults():
+class IndoAuthenticityResults:
     co_occurence: DataFrame
     most_similar_words: dict[str, str]
+
 
 class EmbeddingModel(Enum):
     WORD2VEC = 1
     FASTTEXT = 2
     SENTENCE_TRANSFORMER = 3
 
+
 @dataclass(frozen=True)
 class DistilbertClassificationResult:
     translated_text: str
     label: str
     score: float
+
 
 @dataclass(frozen=True)
 class OllamaClassificationResult:
