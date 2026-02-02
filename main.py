@@ -108,7 +108,7 @@ def main() -> None:
     )
 
     # sentiment_analysis(plain_text_search_results_without_ads)
-    classification_results = technocratism(plain_text_search_results_without_ads)
+    classification_results = classify_articles(plain_text_search_results_without_ads)
 
     with open(ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH, "w") as f:
         classification_results_dict = [asdict(r) for r in classification_results]
@@ -169,12 +169,9 @@ def indifference(texts: list[TranslatedSearchResult]) -> Any:
     return sentiment_results
 
 
-def technocratism(
+def classify_articles(
     texts: list[PlainTextSearchResult],
 ) -> list[DistilbertClassificationResult] | list[OllamaClassificationResult]:
-    print("Running technocratism tests...")
-    # technocratic tendencies, which is explored through topic modeling or classification to test if most articles focus on sustainability, health, and economics;
-
     # return classify_articles_english(translated_texts)
     return classify_articles_dutch(texts)
 
