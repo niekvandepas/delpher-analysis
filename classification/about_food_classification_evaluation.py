@@ -123,8 +123,10 @@ sample_not_food = not_food_df.sample(n=min(50, len(not_food_df)), random_state=4
 # Combine and shuffle
 eval_set = pd.concat([sample_food, sample_not_food]).sample(frac=1, random_state=42)
 
-annotated_df = annotate_entries_curses(eval_set)
-print_metrics(annotated_df)
-
 annotated_data_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
-annotated_df.to_csv(annotated_data_path, index=False)
+
+# annotated_df = annotate_entries_curses(eval_set)
+# annotated_df.to_csv(annotated_data_path, index=False)
+
+annotated_df = pd.read_csv(annotated_data_path)
+print_metrics(annotated_df)
