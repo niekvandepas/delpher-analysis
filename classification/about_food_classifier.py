@@ -115,9 +115,7 @@ def classify_about_food(
                 processed_ids.add(line.replace("ID: ", "").strip())
 
     # Filter out already processed items
-    texts_to_process = [
-        sr for sr in texts_to_classify if sr.identifier not in processed_ids
-    ]
+    texts_to_process = [search_result for search_result in texts if search_result.identifier not in processed_ids]
 
     print(f"Total texts: {len(texts_to_classify)}")
     print(f"Already processed: {len(processed_ids)}")
