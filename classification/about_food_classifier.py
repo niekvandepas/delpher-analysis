@@ -12,7 +12,6 @@ from threading import Lock
 from delpher_types import OllamaClassificationResult, PlainTextSearchResult
 from utils import truncate_text
 
-MODEL_NAME = "llama3:8b"
 CLASSIFICATION_CATEGORIES = "[Is about food], [Is not about food]"
 EXAMPLE_TEXT_1 = "'Drugsteams met Fransen Frankrijk en Nederland strijden samen tegen XTC Van onze politieke redactie Den Haag - Er komen speciale Frans-Nederlandse teams om de productie en verkoop van synthetische drugs te bestrijden. President Chirac en premier Kok hebben dat gisteren afgesproken op de tweede dag van Chiracs staatsbezoek. Chirac noemde de samenwerking in de strijd tegen drugs als stc 'bijzonder goed' en 'voorbeeldig'. Hoewel er 'verschil van inzicht' blijft bestaan, werken beide landen 'op positieve wijze' samen, zei hij gisteravond als eregast op het jaarlijkse diner van de Vrienden van Nieuwspoort. Frankrijk en Nederland sloegen in 1995 de handen ineen inzake politie, justitie en douane. De samenwerking kreeg een deuk toen een Franse senator Nederland begin 1996 een 'narcostaat' noemde en Frankrijk de grenscontrole met België weer inroerde om het drugstoerisme de pas af te snijden. Pas sinds 1997 zit er vaart in de samenwerking. De toenmalige ministers van Justitie Sorgdrager en Toubon maakten in dat jaar een einde aan de pesterijtjes over en weer met een symbolische zoen voor de camera's. Met steun van Chirac en Kok werd vanaf dat moment voluit de strijd tegen xtc ingezet. Gisteren zei Chirac overigens dat hij de tijd nog niet rijp acht voor volledige toepassing van het Verdrag van Schengen, dat open grenzen voorschrijft. Premier Kok zat er niet mee. Hij deed de handhaving van de grenscontrole gisteren af als 'symboolpolitiek': \"In de praktijk stelt het weinig voor.\" Het staatsbezoek stond in het teken van verzoening en begrip. Volgens Chirac leidden 'natuurwetten, vrijheid van denken en economische noodzaak' in Nederland tot 'wat wij Fransen vaak voor overdreven laisser-faire houden', maar wat Nederland beschouwt als 'een rechtmatig gedogen'. \"Ikben blij hier te zijn, en ditis absoluut geen diplomatiek zinnetje\", zei Chirac. Op pagina g| Chirac vraagt begrip voor Franse deugden Chirac vraagt begrip voor Franse deugden Vervolg van pagina i Staatsbezoek Maar de liefde kan niet van één kant komen. Chirac vroeg eveneens begrip voor enkele Franse deugden, die vaak versleten worden voor verkalkte tradities. \"U vindt dat het alles 'staatsbemoeienis' is wat klok slaat in Frankrijk. Maar dat is steeds minder het geval. U vindt dat Frankrijk protectionistische trekken vertoont. Maar wij staan in de wereld op de vierde plaats qua in- en uitvoer. Frankrijk wekt vaak verbazing doordat het zo aan zijn taal en cultuur gehecht is. Het tegendeel is waar: wij zitten midden in de mondialisering, maar opening is niet synoniem met eenvormigheid.\" De jonge SP-senator Van Vugt (20) werd gisteren gearresteerd wegens verstoring van de openbare orde: hij protesteerde zonder vergunning in het aangezicht van Chirac tegen het Franse nucleaire beleid met een fluitje en een T-shirt dat herinnerde aan de Franse kernproeven. Andere demonstranten slaagden er in te ontkomen.'"
 EXAMPLE_CATEGORY_1 = "Is not about food"
@@ -31,7 +30,7 @@ Category 2: {EXAMPLE_CATEGORY_2}
 """
 
 
-def classify_text_with_ollama(client: ollama.Client, text: str) -> str:
+def classify_text_with_ollama(client: ollama.Client, text: str, model_name: str) -> str:
     """Sends a classification request to the local Ollama model."""
     messages = [
         {"role": "system", "content": CLASSIFICATION_SYSTEM_PROMPT},
@@ -39,18 +38,20 @@ def classify_text_with_ollama(client: ollama.Client, text: str) -> str:
     ]
     try:
         response = client.chat(
-            model=MODEL_NAME, messages=messages, options={"temperature": 0.0}
+            model=model_name, messages=messages, options={"temperature": 0.0}
         )
         return response["message"]["content"].strip()
     except Exception as e:
         return f"ERROR: {e}"
 
 
-def process_single_item(search_result, client, file_lock) -> OllamaClassificationResult:
+def process_single_item(
+    search_result, client, file_lock, model_name: str
+) -> OllamaClassificationResult:
     """Process a single classification task."""
     text = truncate_text(normalize_unicode(strip_xml_tags(search_result.ocr_xml)), 2000)
 
-    classification = classify_text_with_ollama(client, text)
+    classification = classify_text_with_ollama(client, text, model_name)
 
     return OllamaClassificationResult(
         text=text,
@@ -78,9 +79,15 @@ def classify_about_food(
         )
     num_workers = int(num_workers)
 
+    model_name = os.environ.get("ABOUT_FOOD_CLASSIFIER_MODEL")
+    if not model_name:
+        raise ValueError(
+            "Please set the ABOUT_FOOD_CLASSIFIER_MODEL environment variable."
+        )
+
     print(f"Total texts: {len(texts)}")
     print(
-        f"Starting classification with {num_workers} parallel workers using {MODEL_NAME}..."
+        f"Starting classification with {num_workers} parallel workers using {model_name}..."
     )
 
     results: list[OllamaClassificationResult] = []
