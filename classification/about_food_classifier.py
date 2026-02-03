@@ -9,6 +9,7 @@ from data_import import import_search_results_ndjson, normalize_unicode, strip_x
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from threading import Lock
 
+from delpher_types import OllamaClassificationResult, PlainTextSearchResult
 from utils import truncate_text
 
 MODEL_NAME = "llama3:8b"
@@ -80,10 +81,9 @@ def process_single_item(search_result, client, file_lock, out_file_path, process
     }
 
 
-if __name__ == "__main__":
-    dotenv_path = os.path.join(PROJECT_DIR, ".env")
-    load_dotenv(dotenv_path)
-
+def classify_about_food(
+    texts: list[PlainTextSearchResult],
+) -> list[OllamaClassificationResult]:
     classification_data_path = os.environ.get("CLASSIFICATION_DATA_PATH")
     if not classification_data_path:
         raise ValueError(
