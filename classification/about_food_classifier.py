@@ -94,6 +94,13 @@ if __name__ == "__main__":
     if not out_file_path:
         raise ValueError("Please set the OLLAMA_OUT_FILE_PATH environment variable.")
 
+    num_workers = os.environ.get("NUM_WORKERS_ABOUT_FOOD_CLASSIFIER")
+    if not num_workers:
+        raise ValueError(
+            "Please set the NUM_WORKERS_ABOUT_FOOD_CLASSIFIER environment variable."
+        )
+    num_workers = int(num_workers)
+
     texts_to_classify = import_search_results_ndjson(classification_data_path)
     shuffle(texts_to_classify)
 
@@ -116,7 +123,7 @@ if __name__ == "__main__":
     print(f"Already processed: {len(processed_ids)}")
     print(f"Remaining to process: {len(texts_to_process)}")
     print(
-        f"Starting classification with {NUM_WORKERS} parallel workers using {MODEL_NAME}..."
+        f"Starting classification with {num_workers} parallel workers using {MODEL_NAME}..."
     )
 
     results = []
@@ -124,7 +131,7 @@ if __name__ == "__main__":
     global_start_time = time()
     completed_count = 0
 
-    with ThreadPoolExecutor(max_workers=NUM_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=num_workers) as executor:
         futures = {
             executor.submit(
                 process_single_item,
