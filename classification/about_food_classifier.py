@@ -46,39 +46,16 @@ def classify_text_with_ollama(client: ollama.Client, text: str) -> str:
         return f"ERROR: {e}"
 
 
-def process_single_item(search_result, client, file_lock, out_file_path, processed_ids):
+def process_single_item(search_result, client, file_lock) -> OllamaClassificationResult:
     """Process a single classification task."""
-    # Check if already processed
-    if search_result.identifier in processed_ids:
-        return None
-
-    start_time = time()
     text = truncate_text(normalize_unicode(strip_xml_tags(search_result.ocr_xml)), 2000)
 
     classification = classify_text_with_ollama(client, text)
 
-    result = {
-        "id": search_result.identifier,
-        "original_text": text,
-        "predicted_category": classification,
-    }
-
-    end_time = time()
-
-    # Thread-safe file writing
-    with file_lock:
-        with open(out_file_path, "a", encoding="utf-8") as out_file:
-            out_file.write(f"ID: {search_result.identifier}\n")
-            out_file.write(f"Predicted Category: {classification}\n")
-            out_file.write(f"Original Text: {text}\n")
-            out_file.write("--------------------------------------------------\n")
-        processed_ids.add(search_result.identifier)
-
-    return {
-        "result": result,
-        "time": end_time - start_time,
-        "classification": classification,
-    }
+    return OllamaClassificationResult(
+        text=text,
+        label=classification,
+    )
 
 
 def classify_about_food(
@@ -101,30 +78,12 @@ def classify_about_food(
         )
     num_workers = int(num_workers)
 
-    texts_to_classify = import_search_results_ndjson(classification_data_path)
-    shuffle(texts_to_classify)
-
-    # Create output file if it doesn't exist and load already processed IDs
-    if not os.path.exists(out_file_path):
-        open(out_file_path, "w").close()
-
-    processed_ids = set()
-    with open(out_file_path, "r") as f:
-        for line in f:
-            if line.startswith("ID: "):
-                processed_ids.add(line.replace("ID: ", "").strip())
-
-    # Filter out already processed items
-    texts_to_process = [search_result for search_result in texts if search_result.identifier not in processed_ids]
-
-    print(f"Total texts: {len(texts_to_classify)}")
-    print(f"Already processed: {len(processed_ids)}")
-    print(f"Remaining to process: {len(texts_to_process)}")
+    print(f"Total texts: {len(texts)}")
     print(
         f"Starting classification with {num_workers} parallel workers using {MODEL_NAME}..."
     )
 
-    results = []
+    results: list[OllamaClassificationResult] = []
     file_lock = Lock()
     global_start_time = time()
     completed_count = 0
@@ -136,32 +95,29 @@ def classify_about_food(
                 search_result,
                 ollama.Client(),  # Each thread gets its own client
                 file_lock,
-                out_file_path,
-                processed_ids,
             ): search_result
-            for search_result in texts_to_process
+            for search_result in texts
         }
 
         for future in as_completed(futures):
             result_data = future.result()
-            if result_data is not None:
-                results.append(result_data["result"])
-                completed_count += 1
 
-                total_to_process = len(texts_to_process)
-                elapsed_time = time() - global_start_time
-                avg_time_per_item = (
-                    elapsed_time / completed_count if completed_count > 0 else 0
-                )
-                remaining_items = total_to_process - completed_count
-                estimated_remaining_time = avg_time_per_item * remaining_items
+            results.append(result_data)
+            completed_count += 1
 
-                print(
-                    f"✓ Processed {completed_count}/{total_to_process} | "
-                    f"Result: {result_data['classification']} | "
-                    f"Time: {result_data['time']:.2f}s | "
-                    f"Est. remaining: {estimated_remaining_time/60:.1f}min"
-                )
+            total_to_process = len(texts)
+            elapsed_time = time() - global_start_time
+            avg_time_per_item = (
+                elapsed_time / completed_count if completed_count > 0 else 0
+            )
+            remaining_items = total_to_process - completed_count
+            estimated_remaining_time = avg_time_per_item * remaining_items
+
+            print(
+                f"✓ Processed {completed_count}/{total_to_process} | "
+                f"Result: {result_data.label} | "
+                f"Est. remaining: {estimated_remaining_time/60:.1f}min"
+            )
 
     global_end_time = time()
     total_time = global_end_time - global_start_time
@@ -174,9 +130,4 @@ def classify_about_food(
     print(f"⚡ Average time per item: {total_time/completed_count:.2f} seconds")
     print(f"🚀 Throughput: {completed_count*3600/total_time:.1f} items/hour")
     print(f"{'='*60}")
-
-    output_filename = "output/about_food_classification_results.json"
-    with open(output_filename, "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=4, ensure_ascii=False)
-
-    print(f"\n✅ Automation complete! Results saved to {output_filename}")
+    return results
