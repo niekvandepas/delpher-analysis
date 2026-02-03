@@ -41,9 +41,7 @@ else
 fi
 
 echo "✨ Setup complete. Keeping container alive..."
-bash -c 'apt update; \
-DEBIAN_FRONTEND=noninteractive apt-get install openssh-server -y; \
-mkdir -p ~/.ssh; \
+bash -c 'mkdir -p ~/.ssh; \
 cd ~/.ssh; \
 chmod 700 ~/.ssh; \
 echo "$SSH_PUBLIC_KEY" >> authorized_keys; \
