@@ -102,6 +102,7 @@ def classify_about_food(
                 search_result,
                 ollama.Client(),  # Each thread gets its own client
                 file_lock,
+                model_name,
             ): search_result
             for search_result in texts
         }
