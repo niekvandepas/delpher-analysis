@@ -1,6 +1,15 @@
 from sklearn.metrics import classification_report, confusion_matrix
 import pandas as pd
 import curses
+import json
+from pathlib import Path
+import sys
+
+# HACK: allow importing from parent directory
+sys.path.append(str(Path(__file__).resolve().parent.parent))
+from constants import ANNOTATED_DATA_DIR
+from delpher_types import OllamaClassificationResult
+
 
 def has_valid_category_value(line: str):
     if line.startswith("Predicted Category: Is about food"):
@@ -10,58 +19,11 @@ def has_valid_category_value(line: str):
     return False
 
 
-def get_valid_entries():
-    valid_line_starts = [
-      "ID",
-      "Predicted Category",
-      "Original Text",
-      "--------------------------------------------------"
-    ]
+def get_classification_results(file_path: str) -> list[OllamaClassificationResult]:
+    with open(file_path, "r") as f:
+        values: list[dict] = json.load(f)
+        return [OllamaClassificationResult(**v) for v in values]
 
-    with open("ollama_out.txt", "r") as f:
-        lines = f.readlines()
-        valid_lines = []
-
-        # Ignore lines that don't start with ID, Predicted Category, or Original Text
-        for line in lines:
-            for valid_line_start in valid_line_starts:
-                if line.startswith(valid_line_start):
-                    if line.startswith("Predicted Category"):
-                        if has_valid_category_value(line):
-                            valid_lines.append(line)
-                    else:
-                        valid_lines.append(line)
-
-        entries = []
-        current_entry = []
-        for i, line in enumerate(valid_lines):
-            if i == 304:
-                ...
-            if line.strip() == "--------------------------------------------------":
-                if current_entry:
-                    entries.append(current_entry)
-                    current_entry = []
-            else:
-                current_entry.append(line.strip())
-
-        valid_entries = []
-        for entry in entries:
-            if len(entry) == 3:
-                valid_entries.append(entry)
-
-        return valid_entries
-
-
-entries = get_valid_entries()
-
-df = pd.DataFrame([
-    {
-        'id': entry[0].replace("ID:", "").strip(),
-        'predicted_category': entry[1].replace("Predicted Category:", "").strip(),
-        'original_text': entry[2].replace("Original Text:", "").strip()
-    }
-    for entry in entries
-])
 
 def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
     annotations = []
@@ -82,7 +44,6 @@ def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
                 # Prepare the text
                 header = f"Item {i+1}/{total}"
                 snippet = row["original_text"]
-                snippet = snippet[: width * (height - 6)]  # very crude wrap-cut
 
                 stdscr.addstr(0, 0, header)
                 stdscr.addstr(2, 0, "TEXT:")
@@ -138,6 +99,19 @@ def print_metrics(df: pd.DataFrame):
     print(classification_report(y_true, y_pred, target_names=labels, zero_division=0))
 
 
+entries = get_classification_results(file_path="output/about_food_8b.json")
+
+df = pd.DataFrame(
+    [
+        {
+            "id": i,
+            "predicted_category": entry.label,
+            "original_text": entry.text,
+        }
+        for i, entry in enumerate(entries)
+    ]
+)
+
 # Separate the classes
 food_df = df[df["predicted_category"] == "Is about food"]
 not_food_df = df[df["predicted_category"] != "Is about food"]
@@ -152,4 +126,5 @@ eval_set = pd.concat([sample_food, sample_not_food]).sample(frac=1, random_state
 annotated_set = annotate_entries_curses(eval_set)
 print_metrics(annotated_set)
 
-annotated_set.to_csv("annotated_evaluation_set.csv", index=False)
+save_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
+annotated_set.to_csv(save_path, index=False)
