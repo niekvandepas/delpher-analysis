@@ -5,6 +5,8 @@ import logging
 import os
 import sys
 
+from classification.about_food_classifier import classify_about_food
+
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
 
 from dotenv import load_dotenv
@@ -22,6 +24,7 @@ from classification.article_topic_classification import (
 )
 from co_occurence import document_co_occurence
 from constants import (
+    ABOUT_FOOD_CLASSIFICATION_RESULTS_PATH,
     ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH,
     BERTOPIC_RESULTS_PATH,
     DOTENV_PATH,
@@ -108,6 +111,8 @@ def main() -> None:
     plain_text_search_results_without_ads = remove_advertisements(
         plain_text_search_results
     )
+    is_about_food_results = classify_about_food(plain_text_search_results_without_ads)
+    save_about_food_results(is_about_food_results)
 
     # sentiment_analysis(plain_text_search_results_without_ads)
 
@@ -252,6 +257,21 @@ def get_most_similar_words(
     elif embedding_model == EmbeddingModel.SENTENCE_TRANSFORMER:
         raise ValueError(
             "Sentence transformers cannot be used to get most similar words."
+        )
+
+def save_about_food_results(
+    classification_results: (
+        list[OllamaClassificationResult]
+    ),
+) -> None:
+    with open(ABOUT_FOOD_CLASSIFICATION_RESULTS_PATH, "w") as f:
+        classification_results_dict = [asdict(r) for r in classification_results]
+        json.dump(
+            classification_results_dict,
+            f,
+            ensure_ascii=False,
+            indent=2,
+            default=enum_serializer,
         )
 
 

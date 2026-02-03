@@ -44,3 +44,5 @@ ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH = f"{PROJECT_DIR}/output/article_topic
 BERTOPIC_MODEL_PATH = f"{PROJECT_DIR}/models/bertopic_model"
 BERTOPIC_RESULTS_PATH = f"{PROJECT_DIR}/output/bertopic_results.json"
 ANNOTATED_DATA_DIR = f"{PROJECT_DIR}/annotated/"
+
+ABOUT_FOOD_CLASSIFICATION_RESULTS_PATH = f"{PROJECT_DIR}/output/about_food.json"
