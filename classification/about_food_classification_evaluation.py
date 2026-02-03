@@ -96,6 +96,24 @@ def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
     return result
 
 
+def evaluate_model_performance(
+    entries: list[OllamaClassificationResult], annotated_df: pd.DataFrame
+) -> None:
+    # Substitute dinges
+    df = annotated_df.copy()
+
+    # HACK: Match entries and the annotated dataframe on fulltext, because I was stupid enough not to return IDs from the Ollama classifier...
+    text_to_label = {e.text: e.label for e in entries}
+    df["predicted_category"] = df["original_text"].map(text_to_label)
+
+    unmatched = df[df["predicted_category"].isna()]
+    if not unmatched.empty:
+        # If this point has been reached, the text mapping did not work perfectly, probably due to unicode conversion or some other lossy reading... again, this is why IDs exist :)
+        print(f"Warning: {len(unmatched)} rows did not match any new label")
+
+    print_metrics(df)
+
+
 def print_metrics(df: pd.DataFrame):
     """Calculates and prints confusion matrix and classification report."""
     if "true_label" not in df.columns:
@@ -122,13 +140,14 @@ def print_metrics(df: pd.DataFrame):
     print(classification_report(y_true, y_pred, target_names=labels, zero_division=0))
 
 
-entries = get_classification_results(file_path="output/about_food_8b.json")
+entries = get_classification_results(file_path="output/about_food_ollama3_70b.json")
+# TODO this review set is only 60 items long, since it grabs 50 from 'is about food' but only 10 from 'is not about food', since there's only a couple of those in the dataset.
 review_set = construct_review_set(entries)
 
 annotated_data_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
 
-# annotated_df = annotate_entries_curses(review_set)
+annotated_df = annotate_entries_curses(review_set)
 # annotated_df.to_csv(annotated_data_path, index=False)
 
 annotated_df = pd.read_csv(annotated_data_path)
-print_metrics(annotated_df)
+evaluate_model_performance(entries, annotated_df)
