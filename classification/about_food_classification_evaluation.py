@@ -65,7 +65,7 @@ df = pd.DataFrame([
 
 def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
     annotations = []
-    records = df.to_dict('records')
+    records = df.to_dict("records")
 
     def main(stdscr):
         curses.curs_set(0)
@@ -88,7 +88,9 @@ def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
                 stdscr.addstr(2, 0, "TEXT:")
                 stdscr.addstr(3, 0, snippet)
 
-                stdscr.addstr(height - 3, 0, "Is this about food? (y = yes, n = no, q = quit)")
+                stdscr.addstr(
+                    height - 3, 0, "Is this about food? (y = yes, n = no, q = quit)"
+                )
                 stdscr.refresh()
 
                 ch = stdscr.getch()
@@ -105,37 +107,40 @@ def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
     curses.wrapper(main)
 
     # Build output df (partial or full)
-    result = df.iloc[:len(annotations)].copy()
+    result = df.iloc[: len(annotations)].copy()
     result["true_label"] = annotations
     return result
 
 
 def print_metrics(df: pd.DataFrame):
     """Calculates and prints confusion matrix and classification report."""
-    if 'true_label' not in df.columns:
+    if "true_label" not in df.columns:
         return
 
-    y_true = df['true_label']
-    y_pred = df['predicted_category']
+    y_true = df["true_label"]
+    y_pred = df["predicted_category"]
 
-    print("\n" + "="*30)
+    print("\n" + "=" * 30)
     print("EVALUATION RESULTS")
-    print("="*30)
+    print("=" * 30)
 
     # Confusion Matrix
     labels = ["Is about food", "Is not about food"]
     cm = confusion_matrix(y_true, y_pred, labels=labels)
     print("\nConfusion Matrix:")
     print(f"True Pos (Food): {cm[0][0]} | False Neg (Missed Food): {cm[0][1]}")
-    print(f"False Pos (Wrongly Food): {cm[1][0]} | True Neg (Correct Non-Food): {cm[1][1]}")
+    print(
+        f"False Pos (Wrongly Food): {cm[1][0]} | True Neg (Correct Non-Food): {cm[1][1]}"
+    )
 
     # Classification Report
     print("\nDetailed Metrics:")
     print(classification_report(y_true, y_pred, target_names=labels, zero_division=0))
 
+
 # Separate the classes
-food_df = df[df['predicted_category'] == 'Is about food']
-not_food_df = df[df['predicted_category'] != 'Is about food']
+food_df = df[df["predicted_category"] == "Is about food"]
+not_food_df = df[df["predicted_category"] != "Is about food"]
 
 # Sample 50 from each (or all if less than 50)
 sample_food = food_df.sample(n=50, random_state=42)
