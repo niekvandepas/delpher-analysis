@@ -25,6 +25,29 @@ def get_classification_results(file_path: str) -> list[OllamaClassificationResul
         return [OllamaClassificationResult(**v) for v in values]
 
 
+def construct_review_set(entries: list[OllamaClassificationResult]) -> pd.DataFrame:
+    df = pd.DataFrame(
+        [
+            {
+                "id": i,
+                "predicted_category": entry.label,
+                "original_text": entry.text,
+            }
+            for i, entry in enumerate(entries)
+        ]
+    )
+
+    # Separate the classes
+    food_df = df[df["predicted_category"] == "Is about food"]
+    not_food_df = df[df["predicted_category"] != "Is about food"]
+
+    # Sample 50 from each (or all if less than 50)
+    sample_food = food_df.sample(n=50, random_state=42)
+    sample_not_food = not_food_df.sample(n=min(50, len(not_food_df)), random_state=42)
+
+    return pd.concat([sample_food, sample_not_food]).sample(frac=1, random_state=42)
+
+
 def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
     annotations = []
     records = df.to_dict("records")
@@ -100,32 +123,11 @@ def print_metrics(df: pd.DataFrame):
 
 
 entries = get_classification_results(file_path="output/about_food_8b.json")
-
-df = pd.DataFrame(
-    [
-        {
-            "id": i,
-            "predicted_category": entry.label,
-            "original_text": entry.text,
-        }
-        for i, entry in enumerate(entries)
-    ]
-)
-
-# Separate the classes
-food_df = df[df["predicted_category"] == "Is about food"]
-not_food_df = df[df["predicted_category"] != "Is about food"]
-
-# Sample 50 from each (or all if less than 50)
-sample_food = food_df.sample(n=50, random_state=42)
-sample_not_food = not_food_df.sample(n=min(50, len(not_food_df)), random_state=42)
-
-# Combine and shuffle
-eval_set = pd.concat([sample_food, sample_not_food]).sample(frac=1, random_state=42)
+review_set = construct_review_set(entries)
 
 annotated_data_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
 
-# annotated_df = annotate_entries_curses(eval_set)
+# annotated_df = annotate_entries_curses(review_set)
 # annotated_df.to_csv(annotated_data_path, index=False)
 
 annotated_df = pd.read_csv(annotated_data_path)
