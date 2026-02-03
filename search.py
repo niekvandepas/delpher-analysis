@@ -443,5 +443,6 @@ def get_nearest_neighbors():
         for similarity, neighbor in neighbors:
             print(f"  {neighbor}: {similarity:.4f}")
         print()
+
 if __name__ == "__main__":
     main()
