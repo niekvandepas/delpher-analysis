@@ -48,6 +48,19 @@ def construct_review_set(entries: list[OllamaClassificationResult]) -> pd.DataFr
     return pd.concat([sample_food, sample_not_food]).sample(frac=1, random_state=42)
 
 
+def remove_previously_annotated_entries(
+    full_set: pd.DataFrame, previously_annotated_df: pd.DataFrame
+) -> pd.DataFrame:
+    if previously_annotated_df.empty:
+        return full_set
+
+    # HACK: (As below) match entries and the annotated dataframe on fulltext, because I was stupid enough not to return IDs from the Ollama classifier...
+    annotated_texts = set(previously_annotated_df["original_text"])
+    remaining = full_set[~full_set["original_text"].isin(annotated_texts)]
+
+    return remaining
+
+
 def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
     annotations = []
     records = df.to_dict("records")
@@ -147,8 +160,18 @@ review_set = construct_review_set(entries)
 
 annotated_data_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
 
-annotated_df = annotate_entries_curses(review_set)
-# annotated_df.to_csv(annotated_data_path, index=False)
+try:
+    previously_annotated_df = pd.read_csv(annotated_data_path)
+except FileNotFoundError:
+    previously_annotated_df = pd.DataFrame()
 
-annotated_df = pd.read_csv(annotated_data_path)
-evaluate_model_performance(entries, annotated_df)
+entries_to_annotate = remove_previously_annotated_entries(
+    review_set, previously_annotated_df
+)
+newly_annotated_df = annotate_entries_curses(entries_to_annotate)
+all_annotated_entries_df = pd.concat(
+    [previously_annotated_df, newly_annotated_df], ignore_index=True
+)
+all_annotated_entries_df.to_csv(annotated_data_path, index=False)
+
+evaluate_model_performance(entries, all_annotated_entries_df)
