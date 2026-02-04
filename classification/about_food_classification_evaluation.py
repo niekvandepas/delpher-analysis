@@ -110,20 +110,21 @@ def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def evaluate_model_performance(
-    entries: list[OllamaClassificationResult], annotated_df: pd.DataFrame
+    model_name: str,
+    entries: list[OllamaClassificationResult],
+    annotated_df: pd.DataFrame,
 ) -> None:
-    # Substitute dinges
     df = annotated_df.copy()
 
-    # HACK: Match entries and the annotated dataframe on fulltext, because I was stupid enough not to return IDs from the Ollama classifier...
+    # map text -> predicted label
     text_to_label = {e.text: e.label for e in entries}
     df["predicted_category"] = df["original_text"].map(text_to_label)
 
     unmatched = df[df["predicted_category"].isna()]
     if not unmatched.empty:
-        # If this point has been reached, the text mapping did not work perfectly, probably due to unicode conversion or some other lossy reading... again, this is why IDs exist :)
-        print(f"Warning: {len(unmatched)} rows did not match any new label")
+        print(f"[{model_name}] Warning: {len(unmatched)} unmatched rows")
 
+    print(f"\n=== {model_name} ===")
     print_metrics(df)
 
 
@@ -153,25 +154,14 @@ def print_metrics(df: pd.DataFrame):
     print(classification_report(y_true, y_pred, target_names=labels, zero_division=0))
 
 
-entries = get_classification_results(
+entries_8b = get_classification_results(
+    file_path="output/about_food_ollama3_8b_1000.json"
+)
+entries_70b = get_classification_results(
     file_path="output/about_food_ollama3_70b_1000.json"
 )
-review_set = construct_review_set(entries)
-
 annotated_data_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
+annotated_df = pd.read_csv(annotated_data_path)
 
-try:
-    previously_annotated_df = pd.read_csv(annotated_data_path)
-except FileNotFoundError:
-    previously_annotated_df = pd.DataFrame()
-
-entries_to_annotate = remove_previously_annotated_entries(
-    review_set, previously_annotated_df
-)
-newly_annotated_df = annotate_entries_curses(entries_to_annotate)
-all_annotated_entries_df = pd.concat(
-    [previously_annotated_df, newly_annotated_df], ignore_index=True
-)
-all_annotated_entries_df.to_csv(annotated_data_path, index=False)
-
-evaluate_model_performance(entries, all_annotated_entries_df)
+evaluate_model_performance("Ollama 8B", entries_8b, annotated_df)
+evaluate_model_performance("Ollama 70B", entries_70b, annotated_df)
