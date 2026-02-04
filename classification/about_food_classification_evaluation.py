@@ -163,5 +163,28 @@ entries_70b = get_classification_results(
 annotated_data_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
 annotated_df = pd.read_csv(annotated_data_path)
 
+labelled_food = []
+labelled_not_food = []
+
+for entry in entries_8b:
+    if entry.label == "Is about food":
+        labelled_food.append(entry)
+    elif entry.label == "Is not about food":
+        labelled_not_food.append(entry)
+    else:
+        raise ValueError()
+
 evaluate_model_performance("Ollama 8B", entries_8b, annotated_df)
 evaluate_model_performance("Ollama 70B", entries_70b, annotated_df)
+
+# 70b
+# len(labelled_food)
+# 530
+# len(labelled_not_food)
+# 200
+
+# 8b
+# len(labelled_food)
+# 501
+# len(labelled_not_food)
+# 229
