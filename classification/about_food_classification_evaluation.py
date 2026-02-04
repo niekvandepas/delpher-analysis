@@ -140,8 +140,9 @@ def print_metrics(df: pd.DataFrame):
     print(classification_report(y_true, y_pred, target_names=labels, zero_division=0))
 
 
-entries = get_classification_results(file_path="output/about_food_ollama3_70b.json")
-# TODO this review set is only 60 items long, since it grabs 50 from 'is about food' but only 10 from 'is not about food', since there's only a couple of those in the dataset.
+entries = get_classification_results(
+    file_path="output/about_food_ollama3_70b_1000.json"
+)
 review_set = construct_review_set(entries)
 
 annotated_data_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
