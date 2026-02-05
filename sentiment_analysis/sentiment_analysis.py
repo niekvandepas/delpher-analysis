@@ -220,7 +220,7 @@ def analyze_sentiments_dutch_fietje(
     # Each thread gets its own model and tokenizer
     tokenizer = AutoTokenizer.from_pretrained("BramVanroy/fietje-2b-instruct")
     model = AutoModelForCausalLM.from_pretrained(
-        "BramVanroy/fietje-2b-instruct", torch_dtype=torch.float16, device_map="auto"
+        "BramVanroy/fietje-2b-instruct", torch_dtype=torch.float32, device_map="auto"
     )
 
     # Set model to evaluation mode rather than training mode
@@ -239,7 +239,9 @@ def analyze_sentiments_dutch_fietje(
         elif label == "NEUTRAAL":
             normalized_label = SentimentLabel.NEUTRAL
         else:
-            logging.warning(f"Unexpected label '{label}' from Fietje, defaulting to NEUTRAAL.")
+            logging.warning(
+                f"Unexpected label '{label}' from Fietje, defaulting to NEUTRAAL."
+            )
 
         result = SentimentResult(
             text=search_result.plain_text,
@@ -269,32 +271,68 @@ def analyze_sentiments_dutch_fietje(
 
 
 def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
-    prompt = (
-        "Je bent een sentimentanalyse-model. "
-        "Classificeer de volgende tekst als POSITIEF, NEUTRAAL of NEGATIEF.\n\n"
-        f'Tekst: "{text}"\n\n'
-        "Antwoord exact in het volgende JSON-formaat:\n"
-        '{"label": "POSITIEF/NEUTRAAL/NEGATIEF"}\n'
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "Je bent een sentimentanalyse-model. "
+                "Classificeer de tekst. Antwoord uitsluitend met een geldige JSON string in het formaat: "
+                '{"label": "CATEGORIE"}. '
+                "Kies voor CATEGORIE uit: POSITIEF, NEUTRAAL, NEGATIEF."
+            ),
+        },
+        {"role": "user", "content": f'Tekst: "{text}"'},
+    ]
+
+    # 1. Get input_ids
+    input_ids = tokenizer.apply_chat_template(
+        messages, return_tensors="pt", add_generation_prompt=True
+    ).to(model.device)
+
+    # 2. Create attention_mask (required for M4/MPS, good practice for NVIDIA/CUDA)
+    attention_mask = torch.ones_like(input_ids)
+
+    # 3. Handle pad_token_id (prevents warnings on both systems)
+    pad_token_id = (
+        tokenizer.pad_token_id
+        if tokenizer.pad_token_id is not None
+        else tokenizer.eos_token_id
     )
 
-    inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
-        output_ids = model.generate(**inputs, max_new_tokens=40, temperature=0.0)
+        outputs = model.generate(
+            input_ids=input_ids,  # Explicitly name the argument
+            attention_mask=attention_mask,  # Explicitly pass the mask
+            max_new_tokens=40,
+            temperature=0.1,
+            do_sample=True,
+            pad_token_id=pad_token_id,
+        )
 
-    output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
+    # 4. Slice to keep only new tokens
+    new_tokens = outputs[0][input_ids.shape[1] :]
+    output_text = tokenizer.decode(new_tokens, skip_special_tokens=True)
 
-    # Extract JSON from the tail of the output
+    # 5. Parse
     import json
     import re
 
-    match = re.search(r"\{.*\}", output_text, flags=re.DOTALL)
-    if not match:
-        raise ValueError("No JSON object found in model output.")
+    match = re.search(r"\{.*?\}", output_text, flags=re.DOTALL)
+    if match:
+        try:
+            data = json.loads(match.group(0))
+            return data.get("label", "NEUTRAAL").upper()
+        except:
+            pass
 
-    data = json.loads(match.group(0))
-    label = data.get("label", "NEUTRAAL")
-
-    return label.upper()
+    clean = output_text.upper()
+    if "POSITIEF" in clean:
+        return "POSITIEF"
+    if "NEGATIEF" in clean:
+        return "NEGATIEF"
+    if "NEUTRAAL" in clean:
+        return "NEUTRAAL"
+    raise ValueError(f"Could not classify sentiment from Fietje output: {output_text}")
 
 
 def analyze_sentiments_dutch_ollama(
