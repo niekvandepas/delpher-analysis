@@ -114,6 +114,7 @@ def main() -> None:
     # is_about_food_results = classify_about_food(plain_text_search_results_without_ads)
     # save_about_food_results(is_about_food_results)
 
+    sentiment_analysis(plain_text_search_results_without_ads)
 
     classification_results = classify_articles(plain_text_search_results_without_ads)
     save_classification_results(classification_results)
