@@ -4,16 +4,22 @@ import os
 from time import time
 import ollama
 from sklearn.pipeline import Pipeline  # type: ignore
-from transformers import TranslationPipeline, pipeline, AutoTokenizer, AutoModelForCausalLM # type: ignore
+from transformers import TranslationPipeline, pipeline, AutoTokenizer, AutoModelForCausalLM  # type: ignore
 from typing import Any, List, Optional, cast
 import torch
 
 
-from delpher_types import PlainTextSearchResult, SentimentLabel, SentimentResult, TranslatedSearchResult
+from delpher_types import (
+    PlainTextSearchResult,
+    SentimentLabel,
+    SentimentResult,
+    TranslatedSearchResult,
+)
 
 
-
-def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[SentimentResult]:
+def analyze_sentiments_robbert(
+    texts: list[PlainTextSearchResult],
+) -> list[SentimentResult]:
     """
     Performs Dutch sentiment analysis using RoBERTa model,
     utilizing multithreading for increased throughput.
@@ -33,7 +39,7 @@ def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[Senti
         sentiment_pipeline = pipeline(
             "text-classification",
             model="DTAI-KULeuven/robbert-v2-dutch-sentiment",
-            device=0
+            device=0,
         )
 
         try:
@@ -67,17 +73,20 @@ def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[Senti
             )
 
         end_time = time()
-        print(f"Processed item {search_result.identifier} in {end_time - start_time:.2f} seconds.")
+        print(
+            f"Processed item {search_result.identifier} in {end_time - start_time:.2f} seconds."
+        )
 
         return result
 
     results: list[SentimentResult] = []
-    print(f"Starting RoBERTa sentiment analysis on {len(texts)} items with {NUM_WORKERS_ROBBERT} workers...")
+    print(
+        f"Starting RoBERTa sentiment analysis on {len(texts)} items with {NUM_WORKERS_ROBBERT} workers..."
+    )
 
     with ThreadPoolExecutor(max_workers=NUM_WORKERS_ROBBERT) as executor:
         future_to_item = {
-            executor.submit(process_single_text, item): item
-            for item in texts
+            executor.submit(process_single_text, item): item for item in texts
         }
 
         completed_count = 0
@@ -87,7 +96,7 @@ def analyze_sentiments_robbert(texts: list[PlainTextSearchResult]) -> list[Senti
 
             completed_count += 1
             if completed_count % 10 == 0 or completed_count == len(texts):
-                print(f"Processed {completed_count}/{len(texts)}", end='\r')
+                print(f"Processed {completed_count}/{len(texts)}", end="\r")
 
     print(f"\nAnalysis complete. Processed {len(results)} items.")
     return results
@@ -109,7 +118,6 @@ def sentiment_analysis_dutch(
         ),
     )
 
-
     results: list[SentimentResult] = []
     for search_result, out in zip(texts, outputs):
         if out["label"] == "Positive":
@@ -119,18 +127,25 @@ def sentiment_analysis_dutch(
         elif out["label"] == "Neutral":
             normalized_label = SentimentLabel.NEUTRAL
 
-        results.append(SentimentResult(
-            text=search_result.plain_text,
-            identifier=search_result.identifier or "",
-            sentiment_label=normalized_label,
-            sentiment_score=out["score"],
-        ))
+        results.append(
+            SentimentResult(
+                text=search_result.plain_text,
+                identifier=search_result.identifier or "",
+                sentiment_label=normalized_label,
+                sentiment_score=out["score"],
+            )
+        )
 
     return results
 
-def analyze_sentiments_english(texts: list[TranslatedSearchResult]) -> list[SentimentResult]:
+
+def analyze_sentiments_english(
+    texts: list[TranslatedSearchResult],
+) -> list[SentimentResult]:
     # English-language model
-    pipe = pipeline("text-classification", model="cardiffnlp/twitter-roberta-base-sentiment-latest")
+    pipe = pipeline(
+        "text-classification", model="cardiffnlp/twitter-roberta-base-sentiment-latest"
+    )
 
     # Try to detect tokenizer/model max length; fall back to 512
     model_max_length: Optional[int] = None
@@ -196,6 +211,7 @@ def sentiment_analysis_english(
 
     return results
 
+
 def test_deberta():
     # Use a pipeline as a high-level helper
     from transformers import pipeline
@@ -205,47 +221,28 @@ def test_deberta():
     print(result)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
 def analyze_sentiments_dutch_fietje(
-    search_results: List[PlainTextSearchResult]
+    search_results: List[PlainTextSearchResult],
 ) -> List[SentimentResult]:
     """
-    Performs Dutch sentiment analysis using Fietje-2 model,
-    utilizing multithreading for increased throughput.
+    Performs Dutch sentiment analysis using Fietje-2 model.
     """
-    NUM_WORKERS_FIETJE = os.environ.get("NUM_WORKERS_FIETJE")
-    if NUM_WORKERS_FIETJE:
-        NUM_WORKERS_FIETJE = int(NUM_WORKERS_FIETJE)
-    else:
-        print("Environment variable NUM_WORKERS_FIETJE not set, defaulting to 1.")
-        NUM_WORKERS_FIETJE = 1
+    # Each thread gets its own model and tokenizer
+    tokenizer = AutoTokenizer.from_pretrained("BramVanroy/fietje-2b-instruct")
+    model = AutoModelForCausalLM.from_pretrained(
+        "BramVanroy/fietje-2b-instruct", torch_dtype=torch.float16, device_map="auto"
+    )
+
+    # Set model to evaluation mode rather than training mode
+    model.eval()
 
     def process_single_text(search_result: PlainTextSearchResult) -> SentimentResult:
-        """Processes a single text in a dedicated thread."""
+        """Processes a single text."""
         start_time = time()
-
-        # Each thread gets its own model and tokenizer
-        tokenizer = AutoTokenizer.from_pretrained("BramVanroy/fietje-2b-instruct")
-        model = AutoModelForCausalLM.from_pretrained(
-            "BramVanroy/fietje-2b-instruct",
-            torch_dtype=torch.float16,
-            device_map="auto"
-        )
-
         try:
-            label = classify_sentiment_fietje(model, tokenizer, search_result.plain_text[:1500])
+            label = classify_sentiment_fietje(
+                model, tokenizer, search_result.plain_text[:1500]
+            )
             if label == "POSITIEF":
                 normalized_label = SentimentLabel.POSITIVE
             elif label == "NEGATIEF":
@@ -268,47 +265,38 @@ def analyze_sentiments_dutch_fietje(
             )
 
         end_time = time()
-        print(f"Processed item {search_result.identifier} in {end_time - start_time:.2f} seconds.")
+        print(
+            f"Processed item {search_result.identifier} in {end_time - start_time:.2f} seconds."
+        )
 
         return result
 
     results: List[SentimentResult] = []
-    print(f"Starting Fietje sentiment analysis on {len(search_results)} items with {NUM_WORKERS_FIETJE} workers...")
+    print(f"Starting Fietje sentiment analysis on {len(search_results)} items...")
+    start_time = time()
 
-    with ThreadPoolExecutor(max_workers=NUM_WORKERS_FIETJE) as executor:
-        future_to_item = {
-            executor.submit(process_single_text, item): item
-            for item in search_results
-        }
+    results = [process_single_text(item) for item in search_results]
 
-        completed_count = 0
-        for future in as_completed(future_to_item):
-            result = future.result()
-            results.append(result)
+    end_time = time()
 
-            completed_count += 1
-            if completed_count % 10 == 0 or completed_count == len(search_results):
-                print(f"Processed {completed_count}/{len(search_results)}", end='\r')
-
-    print(f"\nAnalysis complete. Processed {len(results)} items.")
+    print(
+        f"\nAnalysis complete. Processed {len(results)} items in {end_time - start_time:.2f} seconds."
+    )
     return results
+
 
 def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
     prompt = (
         "Je bent een sentimentanalyse-model. "
         "Classificeer de volgende tekst als POSITIEF, NEUTRAAL of NEGATIEF.\n\n"
-        f"Tekst: \"{text}\"\n\n"
+        f'Tekst: "{text}"\n\n'
         "Antwoord exact in het volgende JSON-formaat:\n"
-        "{\"label\": \"POSITIEF/NEUTRAAL/NEGATIEF\"}\n"
+        '{"label": "POSITIEF/NEUTRAAL/NEGATIEF"}\n'
     )
 
     inputs = tokenizer(prompt, return_tensors="pt").to(model.device)
     with torch.no_grad():
-        output_ids = model.generate(
-            **inputs,
-            max_new_tokens=40,
-            temperature=0.0
-        )
+        output_ids = model.generate(**inputs, max_new_tokens=40, temperature=0.0)
 
     output_text = tokenizer.decode(output_ids[0], skip_special_tokens=True)
 
@@ -316,7 +304,7 @@ def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
     import json
     import re
 
-    match = re.search(r'\{.*\}', output_text, flags=re.DOTALL)
+    match = re.search(r"\{.*\}", output_text, flags=re.DOTALL)
     if not match:
         raise ValueError("No JSON object found in model output.")
 
@@ -325,8 +313,9 @@ def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
 
     return label.upper()
 
+
 def analyze_sentiments_dutch_ollama(
-    search_results: List[PlainTextSearchResult]
+    search_results: List[PlainTextSearchResult],
 ) -> List[SentimentResult]:
     """
     Performs Dutch sentiment analysis using a local Ollama model,
@@ -334,7 +323,7 @@ def analyze_sentiments_dutch_ollama(
     """
 
     # Configuration (aligned with your classification script)
-    MODEL_NAME = 'llama3:8b'
+    MODEL_NAME = "llama3:8b"
     NUM_WORKERS_OLLAMA = os.environ.get("NUM_WORKERS_OLLAMA")
     if NUM_WORKERS_OLLAMA:
         NUM_WORKERS_OLLAMA = int(NUM_WORKERS_OLLAMA)
@@ -347,7 +336,7 @@ def analyze_sentiments_dutch_ollama(
         "Je taak is om het sentiment van de gegeven tekst te bepalen. "
         "De mogelijke categorieën zijn: POSITIEF, NEGATIEF of NEUTRAAL "
         "Antwoord UITSLUITEND met een JSON-object in het volgende formaat: "
-        "{\"label\": \"POSITIEF\"}. "
+        '{"label": "POSITIEF"}. '
         "Geen andere tekst of uitleg."
     )
 
@@ -362,7 +351,7 @@ def analyze_sentiments_dutch_ollama(
 
         messages = [
             {"role": "system", "content": SYSTEM_PROMPT},
-            {"role": "user", "content": f"Text: {text_content}"}
+            {"role": "user", "content": f"Text: {text_content}"},
         ]
 
         label = SentimentLabel.NEUTRAL
@@ -373,10 +362,10 @@ def analyze_sentiments_dutch_ollama(
                 model=MODEL_NAME,
                 messages=messages,
                 options={"temperature": 0.0},
-                format="json"  # Force JSON output from Ollama
+                format="json",  # Force JSON output from Ollama
             )
 
-            content = response['message']['content']
+            content = response["message"]["content"]
             data = json.loads(content)
 
             raw_label = data.get("label", "NEUTRAL").upper()
@@ -394,7 +383,9 @@ def analyze_sentiments_dutch_ollama(
             label = SentimentLabel.NEUTRAL
 
         end_time = time()
-        print(f"Processed item {item.identifier} in {end_time - start_time:.2f} seconds.")
+        print(
+            f"Processed item {item.identifier} in {end_time - start_time:.2f} seconds."
+        )
 
         return SentimentResult(
             text=item.plain_text,
@@ -403,7 +394,9 @@ def analyze_sentiments_dutch_ollama(
         )
 
     results: List[SentimentResult] = []
-    print(f"Starting Ollama sentiment analysis on {len(search_results)} items with {NUM_WORKERS_OLLAMA} workers...")
+    print(
+        f"Starting Ollama sentiment analysis on {len(search_results)} items with {NUM_WORKERS_OLLAMA} workers..."
+    )
 
     with ThreadPoolExecutor(max_workers=NUM_WORKERS_OLLAMA) as executor:
         future_to_item = {
@@ -418,7 +411,7 @@ def analyze_sentiments_dutch_ollama(
 
             completed_count += 1
             if completed_count % 10 == 0 or completed_count == len(search_results):
-                print(f"Processed {completed_count}/{len(search_results)}", end='\r')
+                print(f"Processed {completed_count}/{len(search_results)}", end="\r")
 
     print(f"\nAnalysis complete. Processed {len(results)} items.")
     return results
