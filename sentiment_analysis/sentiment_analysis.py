@@ -1,5 +1,6 @@
 from concurrent.futures import ThreadPoolExecutor, as_completed
 import json
+import logging
 import os
 from time import time
 import ollama
@@ -235,8 +236,10 @@ def analyze_sentiments_dutch_fietje(
             normalized_label = SentimentLabel.POSITIVE
         elif label == "NEGATIEF":
             normalized_label = SentimentLabel.NEGATIVE
-        else:
+        elif label == "NEUTRAAL":
             normalized_label = SentimentLabel.NEUTRAL
+        else:
+            logging.warning(f"Unexpected label '{label}' from Fietje, defaulting to NEUTRAAL.")
 
         result = SentimentResult(
             text=search_result.plain_text,
