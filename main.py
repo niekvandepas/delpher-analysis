@@ -258,10 +258,9 @@ def get_most_similar_words(
             "Sentence transformers cannot be used to get most similar words."
         )
 
+
 def save_about_food_results(
-    classification_results: (
-        list[OllamaClassificationResult]
-    ),
+    classification_results: list[OllamaClassificationResult],
 ) -> None:
     with open(ABOUT_FOOD_CLASSIFICATION_RESULTS_PATH, "w") as f:
         classification_results_dict = [asdict(r) for r in classification_results]
