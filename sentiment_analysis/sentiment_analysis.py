@@ -237,7 +237,7 @@ def analyze_sentiments_dutch_fietje(
         start_time = time()
 
         # Each thread gets its own model and tokenizer
-        tokenizer = AutoTokenizer.from_pretrained("BramVanroy/fietje-2")
+        tokenizer = AutoTokenizer.from_pretrained("BramVanroy/fietje-2b-instruct")
         model = AutoModelForCausalLM.from_pretrained(
             "BramVanroy/fietje-2",
             torch_dtype=torch.float16,
