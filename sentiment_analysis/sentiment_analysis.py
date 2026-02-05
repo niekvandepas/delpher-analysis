@@ -229,9 +229,12 @@ def analyze_sentiments_dutch_fietje(
     def process_single_text(search_result: PlainTextSearchResult) -> SentimentResult:
         """Processes a single text."""
         start_time = time()
-        label = classify_sentiment_fietje(
-            model, tokenizer, search_result.plain_text[:1500]
-        )
+        try:
+            label = classify_sentiment_fietje(
+                model, tokenizer, search_result.plain_text[:1500]
+            )
+        except ValueError as e:
+            raise ValueError(e)
         if label == "POSITIEF":
             normalized_label = SentimentLabel.POSITIVE
         elif label == "NEGATIEF":
@@ -260,7 +263,14 @@ def analyze_sentiments_dutch_fietje(
     print(f"Starting Fietje sentiment analysis on {len(search_results)} items...")
     start_time = time()
 
-    results = [process_single_text(item) for item in search_results]
+
+    results = []
+    for search_result in search_results:
+        try:
+            result = process_single_text(search_result)
+            results.append(result)
+        except ValueError as e:
+            logging.warning(f"Skipping item {search_result.identifier} due to error: {e}")
 
     end_time = time()
 
