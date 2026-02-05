@@ -247,12 +247,6 @@ def analyze_sentiments_dutch_fietje(
             sentiment_label=normalized_label,
         )
 
-        result = SentimentResult(
-            text=search_result.plain_text,
-            identifier=search_result.identifier or "",
-            sentiment_label=SentimentLabel.NEUTRAL,
-        )
-
         end_time = time()
         print(
             f"Processed item {search_result.identifier} in {end_time - start_time:.2f} seconds."
