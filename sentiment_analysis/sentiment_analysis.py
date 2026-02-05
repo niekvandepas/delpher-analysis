@@ -123,7 +123,6 @@ def sentiment_analysis_dutch(
                 text=search_result.plain_text,
                 identifier=search_result.identifier or "",
                 sentiment_label=normalized_label,
-                sentiment_score=out["score"],
             )
         )
 
@@ -195,7 +194,6 @@ def sentiment_analysis_english(
             text=text,
             identifier=search_result.identifier or "",
             sentiment_label=result["label"],
-            sentiment_score=result["score"],
         )
 
         results.append(sentiment_result)
