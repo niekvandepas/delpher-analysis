@@ -42,35 +42,26 @@ def analyze_sentiments_robbert(
             device=0,
         )
 
-        try:
-            output = sentiment_pipeline(
-                search_result.plain_text,
-                truncation=True,
-                max_length=512,
-            )[0]
+        output = sentiment_pipeline(
+            search_result.plain_text,
+            truncation=True,
+            max_length=512,
+        )[0]
 
-            if output["label"] == "Positive":
-                normalized_label = SentimentLabel.POSITIVE
-            elif output["label"] == "Negative":
-                normalized_label = SentimentLabel.NEGATIVE
-            elif output["label"] == "Neutral":
-                normalized_label = SentimentLabel.NEUTRAL
-            else:
-                normalized_label = SentimentLabel.NEUTRAL
+        if output["label"] == "Positive":
+            normalized_label = SentimentLabel.POSITIVE
+        elif output["label"] == "Negative":
+            normalized_label = SentimentLabel.NEGATIVE
+        elif output["label"] == "Neutral":
+            normalized_label = SentimentLabel.NEUTRAL
+        else:
+            normalized_label = SentimentLabel.NEUTRAL
 
-            result = SentimentResult(
-                text=search_result.plain_text,
-                identifier=search_result.identifier or "",
-                sentiment_label=normalized_label,
-            )
-
-        except Exception as e:
-            print(f"Error analyzing item {search_result.identifier}: {e}")
-            result = SentimentResult(
-                text=search_result.plain_text,
-                identifier=search_result.identifier or "",
-                sentiment_label=SentimentLabel.NEUTRAL,
-            )
+        result = SentimentResult(
+            text=search_result.plain_text,
+            identifier=search_result.identifier or "",
+            sentiment_label=normalized_label,
+        )
 
         end_time = time()
         print(
@@ -239,30 +230,27 @@ def analyze_sentiments_dutch_fietje(
     def process_single_text(search_result: PlainTextSearchResult) -> SentimentResult:
         """Processes a single text."""
         start_time = time()
-        try:
-            label = classify_sentiment_fietje(
-                model, tokenizer, search_result.plain_text[:1500]
-            )
-            if label == "POSITIEF":
-                normalized_label = SentimentLabel.POSITIVE
-            elif label == "NEGATIEF":
-                normalized_label = SentimentLabel.NEGATIVE
-            else:
-                normalized_label = SentimentLabel.NEUTRAL
+        label = classify_sentiment_fietje(
+            model, tokenizer, search_result.plain_text[:1500]
+        )
+        if label == "POSITIEF":
+            normalized_label = SentimentLabel.POSITIVE
+        elif label == "NEGATIEF":
+            normalized_label = SentimentLabel.NEGATIVE
+        else:
+            normalized_label = SentimentLabel.NEUTRAL
 
-            result = SentimentResult(
-                text=search_result.plain_text,
-                identifier=search_result.identifier or "",
-                sentiment_label=normalized_label,
-            )
+        result = SentimentResult(
+            text=search_result.plain_text,
+            identifier=search_result.identifier or "",
+            sentiment_label=normalized_label,
+        )
 
-        except Exception as e:
-            print(f"Error analyzing item {search_result.identifier}: {e}")
-            result = SentimentResult(
-                text=search_result.plain_text,
-                identifier=search_result.identifier or "",
-                sentiment_label=SentimentLabel.NEUTRAL,
-            )
+        result = SentimentResult(
+            text=search_result.plain_text,
+            identifier=search_result.identifier or "",
+            sentiment_label=SentimentLabel.NEUTRAL,
+        )
 
         end_time = time()
         print(
