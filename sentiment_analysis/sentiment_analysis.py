@@ -338,7 +338,6 @@ def analyze_sentiments_dutch_ollama(
         ]
 
         label = SentimentLabel.NEUTRAL
-        score = 0.5
 
         try:
             response = client.chat(
