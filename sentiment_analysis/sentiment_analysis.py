@@ -114,28 +114,6 @@ def analyze_sentiments_robbert(
 
     return results
 
-    results: list[SentimentResult] = []
-    print(
-        f"Starting RoBERTa sentiment analysis on {len(texts)} items with {NUM_WORKERS_ROBBERT} workers..."
-    )
-
-    with ThreadPoolExecutor(max_workers=NUM_WORKERS_ROBBERT) as executor:
-        future_to_item = {
-            executor.submit(process_single_text, item): item for item in texts
-        }
-
-        completed_count = 0
-        for future in as_completed(future_to_item):
-            result = future.result()
-            results.append(result)
-
-            completed_count += 1
-            if completed_count % 10 == 0 or completed_count == len(texts):
-                print(f"Processed {completed_count}/{len(texts)}", end="\r")
-
-    print(f"\nAnalysis complete. Processed {len(results)} items.")
-    return results
-
 
 def sentiment_analysis_dutch(
     analysis_pipeline: Pipeline, texts: list[PlainTextSearchResult]
