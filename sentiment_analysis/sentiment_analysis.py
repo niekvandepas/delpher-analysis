@@ -294,15 +294,12 @@ def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
         {"role": "user", "content": f'Tekst: "{text}"'},
     ]
 
-    # 1. Get input_ids
     input_ids = tokenizer.apply_chat_template(
         messages, return_tensors="pt", add_generation_prompt=True
     ).to(model.device)
 
-    # 2. Create attention_mask (required for M4/MPS, good practice for NVIDIA/CUDA)
     attention_mask = torch.ones_like(input_ids)
 
-    # 3. Handle pad_token_id (prevents warnings on both systems)
     pad_token_id = (
         tokenizer.pad_token_id
         if tokenizer.pad_token_id is not None
@@ -311,19 +308,18 @@ def classify_sentiment_fietje(model, tokenizer, text: str) -> str:
 
     with torch.no_grad():
         outputs = model.generate(
-            input_ids=input_ids,  # Explicitly name the argument
-            attention_mask=attention_mask,  # Explicitly pass the mask
+            input_ids=input_ids,
+            attention_mask=attention_mask,
             max_new_tokens=40,
             temperature=0.1,
             do_sample=True,
             pad_token_id=pad_token_id,
         )
 
-    # 4. Slice to keep only new tokens
+    # Slice to keep only new tokens
     new_tokens = outputs[0][input_ids.shape[1] :]
     output_text = tokenizer.decode(new_tokens, skip_special_tokens=True)
 
-    # 5. Parse
     import json
     import re
 
