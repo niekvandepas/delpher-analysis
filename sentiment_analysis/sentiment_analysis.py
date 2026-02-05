@@ -5,10 +5,11 @@ import os
 from time import time
 import ollama
 from sklearn.pipeline import Pipeline  # type: ignore
-from transformers import TranslationPipeline, pipeline, AutoTokenizer, AutoModelForCausalLM  # type: ignore
+from transformers import TranslationPipeline, pipeline, AutoTokenizer, AutoModelForCausalLM, AutoModelForSequenceClassification # type: ignore
 from typing import Any, List, Optional, cast
 import torch
-
+import numpy as np
+from scipy.special import softmax
 
 from delpher_types import (
     PlainTextSearchResult,
@@ -22,54 +23,96 @@ def analyze_sentiments_robbert(
     texts: list[PlainTextSearchResult],
 ) -> list[SentimentResult]:
     """
-    Performs Dutch sentiment analysis using RoBERTa model,
-    utilizing multithreading for increased throughput.
+    Robust Dutch sentiment analysis using RobBERT with Sliding Window for long texts.
     """
-    NUM_WORKERS_ROBBERT = os.environ.get("NUM_WORKERS_ROBBERT")
-    if NUM_WORKERS_ROBBERT:
-        NUM_WORKERS_ROBBERT = int(NUM_WORKERS_ROBBERT)
-    else:
-        print("Environment variable NUM_WORKERS_ROBBERT not set, defaulting to 1.")
-        NUM_WORKERS_ROBBERT = 1
+    MODEL_NAME = "DTAI-KULeuven/robbert-v2-dutch-sentiment"
 
-    def process_single_text(search_result: PlainTextSearchResult) -> SentimentResult:
-        """Processes a single text in a dedicated thread."""
-        start_time = time()
+    print(f"Loading {MODEL_NAME}...")
+    tokenizer = AutoTokenizer.from_pretrained(MODEL_NAME)
+    model = AutoModelForSequenceClassification.from_pretrained(MODEL_NAME)
 
-        # Each thread gets its own pipeline
-        sentiment_pipeline = pipeline(
-            "text-classification",
-            model="DTAI-KULeuven/robbert-v2-dutch-sentiment",
-            device=0,
-        )
+    # Move to GPU/MPS if available
+    device = "cuda" if torch.cuda.is_available() else "mps" if torch.backends.mps.is_available() else "cpu"
+    model = model.to(device)
+    model.eval()
 
-        output = sentiment_pipeline(
-            search_result.plain_text,
-            truncation=True,
-            max_length=512,
-        )[0]
+    def get_long_text_sentiment(text: str) -> tuple[SentimentLabel, float]:
+        """
+        Splits long text into 512-token chunks, processes them, and averages the scores.
+        """
+        inputs = tokenizer(text, return_tensors="pt", add_special_tokens=False)
+        input_ids = inputs["input_ids"][0]
 
-        if output["label"] == "Positive":
-            normalized_label = SentimentLabel.POSITIVE
-        elif output["label"] == "Negative":
-            normalized_label = SentimentLabel.NEGATIVE
-        elif output["label"] == "Neutral":
-            normalized_label = SentimentLabel.NEUTRAL
+        CHUNK_SIZE = 510
+        STRIDE = 256  # Overlap between chunks to preserve context
+
+        # Split into chunks
+        chunks = []
+        if len(input_ids) <= CHUNK_SIZE:
+            chunks.append(input_ids)
         else:
-            normalized_label = SentimentLabel.NEUTRAL
+            # Create overlapping chunks
+            for i in range(0, len(input_ids), STRIDE):
+                chunk = input_ids[i : i + CHUNK_SIZE]
+                chunks.append(chunk)
+                if i + CHUNK_SIZE >= len(input_ids):
+                    break
 
-        result = SentimentResult(
-            text=search_result.plain_text,
-            identifier=search_result.identifier or "",
-            sentiment_label=normalized_label,
-        )
+        all_probs = []
 
-        end_time = time()
-        print(
-            f"Processed item {search_result.identifier} in {end_time - start_time:.2f} seconds."
-        )
+        with torch.no_grad():
+            for chunk in chunks:
+                # Add [CLS] and [SEP] tokens back manually
+                full_chunk = torch.cat([
+                    torch.tensor([tokenizer.cls_token_id], device=device),
+                    chunk.to(device),
+                    torch.tensor([tokenizer.sep_token_id], device=device)
+                ])
 
-        return result
+                outputs = model(full_chunk.unsqueeze(0))
+                logits = outputs.logits.cpu().numpy()[0]
+
+                probs = softmax(logits)
+                all_probs.append(probs)
+
+        # Average the probabilities across all chunks
+        avg_probs = np.mean(all_probs, axis=0)
+
+        prediction_idx = np.argmax(avg_probs)
+        score = float(avg_probs[prediction_idx])
+
+        if prediction_idx == 1:
+            return SentimentLabel.POSITIVE, score
+        else:
+            return SentimentLabel.NEGATIVE, score
+
+    results = []
+    print(f"Analyzing {len(texts)} texts with RobBERT (Sliding Window)...")
+
+    for i, item in enumerate(texts):
+        start = time()
+        try:
+            label, score = get_long_text_sentiment(item.plain_text)
+
+            # Optional: Heuristic for Neutral
+            # If the confidence score is very low (e.g. 0.51 vs 0.49), it might be neutral
+            if 0.45 < score < 0.55:
+                label = SentimentLabel.NEUTRAL
+
+        except Exception as e:
+            print(f"Error on item {i}: {e}")
+            label = SentimentLabel.NEUTRAL
+            score = 0.0
+
+        results.append(SentimentResult(
+            text=item.plain_text,
+            identifier=item.identifier or "",
+            sentiment_label=label
+        ))
+
+        print(f"Processed {i+1}/{len(texts)}: {label.value} ({score:.2f}) - {time()-start:.2f}s")
+
+    return results
 
     results: list[SentimentResult] = []
     print(
