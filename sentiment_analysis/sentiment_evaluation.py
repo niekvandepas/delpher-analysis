@@ -27,7 +27,7 @@ SentimentResults = TypedDict(
 )
 
 
-def get_evaluation_results() -> SentimentResults:
+def get_sentiment_results() -> SentimentResults:
     """Loads sentiment results from all three models."""
     with open(FIETJE_SENTIMENT_RESULTS_PATH, "r") as f:
         fietje_results = json.load(f)
@@ -118,7 +118,7 @@ def print_metrics(df: pd.DataFrame):
     print(classification_report(y_true, y_pred, labels=labels, zero_division=0))
 
 
-evaluation_results = get_evaluation_results()
+evaluation_results = get_sentiment_results()
 
 model_results = evaluation_results["fietje"]
 
