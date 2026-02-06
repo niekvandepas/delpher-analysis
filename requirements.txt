@@ -1,6 +1,7 @@
 bertopic==0.16.3
 ftfy==6.3.1
 gensim==4.3.2
+nltk==3.9.2
 numpy==1.26.4
 ollama==0.6.1
 pandas==2.3.3
