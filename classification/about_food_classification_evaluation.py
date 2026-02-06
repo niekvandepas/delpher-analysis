@@ -1,3 +1,4 @@
+import logging
 from sklearn.metrics import classification_report, confusion_matrix
 import pandas as pd
 import curses
@@ -44,6 +45,15 @@ def construct_review_set(entries: list[OllamaClassificationResult]) -> pd.DataFr
     # Sample 50 from each (or all if less than 50)
     sample_food = food_df.sample(n=50, random_state=42)
     sample_not_food = not_food_df.sample(n=min(50, len(not_food_df)), random_state=42)
+
+    if len(food_df) < 50:
+        logging.warning(
+            f"Only {len(food_df)} entries with 'Is about food' sentiment, sampled all."
+        )
+    if len(not_food_df) < 50:
+        logging.warning(
+            f"Only {len(not_food_df)} entries without 'Is about food' sentiment, sampled all."
+        )
 
     return pd.concat([sample_food, sample_not_food]).sample(frac=1, random_state=42)
 
