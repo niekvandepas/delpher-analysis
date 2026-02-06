@@ -4,7 +4,11 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.append(str(ROOT))
 
-from constants import FIETJE_SENTIMENT_RESULTS_PATH, OLLAMA_SENTIMENT_RESULTS_PATH, ROBBERT_SENTIMENT_RESULTS_PATH
+from constants import (
+    FIETJE_SENTIMENT_RESULTS_PATH,
+    OLLAMA_SENTIMENT_RESULTS_PATH,
+    ROBBERT_SENTIMENT_RESULTS_PATH,
+)
 import json
 from typing import TypedDict
 from sklearn.metrics import classification_report, confusion_matrix
@@ -13,7 +17,15 @@ import curses
 
 from delpher_types import SentimentResult
 
-SentimentResults = TypedDict('SentimentResults', {'robbert': list[SentimentResult], 'fietje': list[SentimentResult], 'ollama': list[SentimentResult]})
+SentimentResults = TypedDict(
+    "SentimentResults",
+    {
+        "robbert": list[SentimentResult],
+        "fietje": list[SentimentResult],
+        "ollama": list[SentimentResult],
+    },
+)
+
 
 def get_evaluation_results() -> SentimentResults:
     """Loads sentiment results from all three models."""
@@ -27,10 +39,11 @@ def get_evaluation_results() -> SentimentResults:
         ollama_results = json.load(f)
 
     return {
-        'fietje': fietje_results,
-        'robbert': robbert_results,
-        'ollama': ollama_results,
+        "fietje": fietje_results,
+        "robbert": robbert_results,
+        "ollama": ollama_results,
     }
+
 
 def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
     annotations = []
@@ -56,8 +69,10 @@ def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
                 stdscr.addstr(2, 0, "TEXT:")
                 stdscr.addstr(3, 0, snippet)
 
-                stdscr.addstr(height - 3, 0,
-                    "Sentiment? (p = positive, n = negative, o = neutral, q = quit)"
+                stdscr.addstr(
+                    height - 3,
+                    0,
+                    "Sentiment? (p = positive, n = negative, o = neutral, q = quit)",
                 )
                 stdscr.refresh()
 
@@ -76,9 +91,10 @@ def annotate_entries_curses(df: pd.DataFrame) -> pd.DataFrame:
 
     curses.wrapper(main)
 
-    result = df.iloc[:len(annotations)].copy()
+    result = df.iloc[: len(annotations)].copy()
     result["true_label"] = annotations
     return result
+
 
 def print_metrics(df: pd.DataFrame):
     if "true_label" not in df.columns:
@@ -87,9 +103,9 @@ def print_metrics(df: pd.DataFrame):
     y_true = df["true_label"]
     y_pred = df["sentiment_label"]
 
-    print("\n" + "="*30)
+    print("\n" + "=" * 30)
     print("SENTIMENT EVALUATION")
-    print("="*30)
+    print("=" * 30)
 
     labels = sorted(df["true_label"].unique())
 
@@ -98,13 +114,13 @@ def print_metrics(df: pd.DataFrame):
     for i, label in enumerate(labels):
         print(f"{label:>10}: {cm[i]}")
 
-
     print("\nDetailed Metrics:")
     print(classification_report(y_true, y_pred, labels=labels, zero_division=0))
 
+
 evaluation_results = get_evaluation_results()
 
-model_results = evaluation_results["fietje"]  # or "robbert"
+model_results = evaluation_results["fietje"]
 
 df = pd.DataFrame(model_results)
 
