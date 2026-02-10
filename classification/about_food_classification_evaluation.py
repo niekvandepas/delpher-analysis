@@ -173,14 +173,14 @@ entries_70b = get_classification_results(
 annotated_data_path = Path(ANNOTATED_DATA_DIR) / "is_about_food_annotated.csv"
 annotated_df = pd.read_csv(annotated_data_path)
 
-labelled_food = []
-labelled_not_food = []
+classified_as_food = []
+classified_as_not_food = []
 
 for entry in entries_8b:
     if entry.label == "Is about food":
-        labelled_food.append(entry)
+        classified_as_food.append(entry)
     elif entry.label == "Is not about food":
-        labelled_not_food.append(entry)
+        classified_as_not_food.append(entry)
     else:
         raise ValueError()
 
