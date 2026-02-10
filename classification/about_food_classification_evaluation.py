@@ -176,7 +176,7 @@ annotated_df = pd.read_csv(annotated_data_path)
 classified_as_food = []
 classified_as_not_food = []
 
-for entry in entries_8b:
+for entry in entries_70b:
     if entry.label == "Is about food":
         classified_as_food.append(entry)
     elif entry.label == "Is not about food":
@@ -186,6 +186,23 @@ for entry in entries_8b:
 
 evaluate_model_performance("Ollama 8B", entries_8b, annotated_df)
 evaluate_model_performance("Ollama 70B", entries_70b, annotated_df)
+
+proportion_about_food = len(classified_as_food) / (
+    len(classified_as_food) + len(classified_as_not_food)
+)
+proportion_not_about_food = len(classified_as_not_food) / (
+    len(classified_as_food) + len(classified_as_not_food)
+)
+
+
+total_dataset_length = 22278
+
+print(f"\nProportion classified as 'Is about food': {proportion_about_food:.2%}")
+print(f"Proportion classified as 'Is not about food': {proportion_not_about_food:.2%}")
+
+print(f"\nEstimated number of 'Is about food' entries in full dataset: {proportion_about_food * total_dataset_length:.0f}")
+print(f"Estimated number of 'Is not about food' entries in full dataset: {proportion_not_about_food * total_dataset_length:.0f}")
+
 
 # 70b
 # len(labelled_food)
