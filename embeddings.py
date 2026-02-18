@@ -1,10 +1,12 @@
 from enum import Enum
 from gensim.models import FastText, Word2Vec
 from gensim.models import Word2Vec
+import nltk
 import numpy as np
 import os
 from sentence_transformers import SentenceTransformer, util
 from torch import Tensor
+from sklearn.metrics.pairwise import cosine_similarity
 
 from constants import RANDOM_SEED
 
@@ -107,3 +109,31 @@ def get_most_similar_sentence_transformer_documents(
         results[query] = top_results
 
     return results
+
+
+def compute_document_embeddings(docs: list[str]) -> np.ndarray:
+    model = SentenceTransformer(
+        "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
+    )
+    sentence_tokenizer = nltk.data.load("tokenizers/punkt/dutch.pickle")
+
+    doc_embeddings = []
+
+    # Split each document into sentences and then average the vectors, in order to overcome 128-token limit
+    # https://link.springer.com/article/10.1007/s11227-025-07414-4
+    for doc in docs:
+        sentences = sentence_tokenizer.tokenize(doc)
+
+        sentence_embeddings: np.ndarray = model.encode(sentences)  # type: ignore
+        doc_avg = np.mean(sentence_embeddings, axis=0)
+
+        doc_embeddings.append(doc_avg)
+
+    final_embeddings = np.array(doc_embeddings)
+    print("Embeddings shape:", final_embeddings.shape)
+
+    similarity_matrix = cosine_similarity(final_embeddings)
+
+    return similarity_matrix
+
+
