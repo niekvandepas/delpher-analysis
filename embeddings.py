@@ -136,7 +136,6 @@ def compute_document_embeddings(docs: list[str]) -> np.ndarray:
         doc_embeddings.append(doc_avg)
 
     final_embeddings = np.array(doc_embeddings)
-    print("Embeddings shape:", final_embeddings.shape)
 
     similarity_matrix = cosine_similarity(final_embeddings)
 
