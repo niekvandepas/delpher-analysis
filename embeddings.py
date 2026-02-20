@@ -143,5 +143,3 @@ def compute_document_similarity(docs: list[str]) -> np.ndarray:
     similarity_matrix = cosine_similarity(document_embeddings)
 
     return similarity_matrix
-
-
