@@ -49,6 +49,7 @@ from delpher_types import (
     enum_serializer,
 )
 from embeddings import (
+    compute_document_similarity,
     get_most_similar_sentence_transformer_documents,
     get_most_similar_word_embedding_words,
     train_fasttext_model,
@@ -111,7 +112,11 @@ def main() -> None:
     plain_text_search_results_without_ads = remove_advertisements(
         plain_text_search_results
     )
-    # is_about_food_results = classify_about_food(plain_text_search_results_without_ads)
+
+    document_similarity = compute_document_similarity(
+        [x.plain_text for x in plain_text_search_results_without_ads]
+    )
+    # is_aboutfood_results = classify_about_food(plain_text_search_results_without_ads)
     # save_about_food_results(is_about_food_results)
 
     sentiment_analysis(plain_text_search_results_without_ads)
