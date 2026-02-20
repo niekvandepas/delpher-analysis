@@ -332,12 +332,12 @@ def main():
     os.makedirs("models", exist_ok=True)
     os.makedirs("data", exist_ok=True)
 
-    keywords_query_text = build_boolean_query(indo_terms, food_keywords)
+    indo_and_food_query_text = build_boolean_query(indo_terms, food_keywords)
 
-    print("Constructed Query:", keywords_query_text)
+    print("Constructed Query:", indo_and_food_query_text)
 
     search_query = SearchQuery(
-        search_text=keywords_query_text,
+        search_text=indo_and_food_query_text,
         # start_date="1940-01-01",
         start_date="2000-01-01",
         # end_date="1945-12-31",
