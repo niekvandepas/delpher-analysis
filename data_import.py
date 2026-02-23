@@ -45,8 +45,9 @@ def import_search_results(
         search_results.append(search_result)
     return search_results
 
+
 def import_search_results_ndjson(
-        path: str, limit: int | None = None
+    path: str, limit: int | None = None
 ) -> list[OcredSearchResult]:
     search_results = []
     with open(path, "r", encoding="utf-8") as f:
@@ -145,7 +146,7 @@ def data_dir_to_single_json_file(data_dir: str, out_file_path: str) -> None:
 
     for root, dirs, files in os.walk(data_dir):
         for file in files:
-        # Skip metadata files on macOS
+            # Skip metadata files on macOS
             if file.startswith("._"):
                 continue
             absolute_paths.append(os.path.join(root, file))
@@ -177,7 +178,10 @@ def data_dir_to_single_json_file(data_dir: str, out_file_path: str) -> None:
     with open(out_file_path, "w", encoding="utf-8") as out_file:
         out_file.write(out_value)
 
-def remove_advertisements(search_results: list[PlainTextSearchResult]) -> list[PlainTextSearchResult]:
+
+def remove_advertisements(
+    search_results: list[PlainTextSearchResult],
+) -> list[PlainTextSearchResult]:
     search_results_without_ads = []
 
     for search_result in search_results:
@@ -186,7 +190,10 @@ def remove_advertisements(search_results: list[PlainTextSearchResult]) -> list[P
 
     return search_results_without_ads
 
-def preprocess_plain_texts(search_results: list[OcredSearchResult]) -> list[PlainTextSearchResult]:
+
+def preprocess_plain_texts(
+    search_results: list[OcredSearchResult],
+) -> list[PlainTextSearchResult]:
     plain_text_search_results: list[PlainTextSearchResult] = []
 
     for i, search_result in enumerate(search_results):

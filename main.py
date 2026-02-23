@@ -91,10 +91,11 @@ def main() -> None:
     logging.info("Importing search results")
 
     with open(SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH, "r", encoding="utf-8") as f:
-        plain_text_search_results = [PlainTextSearchResult(**json.loads(line)) for line in f]
+        plain_text_search_results = [
+            PlainTextSearchResult(**json.loads(line)) for line in f
+        ]
 
     logging.info("Importing search results done")
-
 
     plain_text_search_results_without_ads = remove_advertisements(
         plain_text_search_results
@@ -111,6 +112,7 @@ def main() -> None:
     )
 
     ...
+
     # is_aboutfood_results = classify_about_food(plain_text_search_results_without_ads)
     # save_about_food_results(is_about_food_results)
 
