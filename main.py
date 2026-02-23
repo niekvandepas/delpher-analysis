@@ -99,10 +99,6 @@ def main() -> None:
         plain_text_search_results
     )
 
-    # document_similarity = time_function(
-    #     compute_document_similarity,
-    #     [x.plain_text for x in plain_text_search_results_without_ads],
-    # )
     document_similarity = compute_document_similarity_from_embeddings(
         DOCUMENT_EMBEDDINGS_PATH
     )
