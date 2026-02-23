@@ -8,7 +8,8 @@ from sentence_transformers import SentenceTransformer, util
 from torch import Tensor
 from sklearn.metrics.pairwise import cosine_similarity
 
-from constants import RANDOM_SEED
+from constants import DOCUMENT_EMBEDDINGS_PATH, RANDOM_SEED
+from delpher_types import PlainTextSearchResult
 
 
 def train_fasttext_model(tokenized_texts: list[list[str]]) -> FastText:
@@ -118,6 +119,9 @@ def get_most_similar_sentence_transformer_documents(
 
 
 def compute_document_embeddings(docs: list[str]) -> np.ndarray:
+    """
+    Computes document embeddings using a pretrained SentenceTransformer. Each document is split into sentences, and the average of the sentence embeddings is taken as the document embedding. The embeddings are saved to a file specified by DOCUMENT_EMBEDDINGS_PATH for future use.
+    """
     model = SentenceTransformer(
         "sentence-transformers/paraphrase-multilingual-MiniLM-L12-v2"
     )
@@ -135,6 +139,7 @@ def compute_document_embeddings(docs: list[str]) -> np.ndarray:
 
         doc_embeddings.append(doc_avg)
 
+    np.save(DOCUMENT_EMBEDDINGS_PATH, doc_embeddings)
     return np.array(doc_embeddings)
 
 
@@ -143,3 +148,33 @@ def compute_document_similarity(docs: list[str]) -> np.ndarray:
     similarity_matrix = cosine_similarity(document_embeddings)
 
     return similarity_matrix
+
+
+def compute_document_similarity_from_embeddings(embeddings_path: str) -> np.ndarray:
+    document_embeddings = np.load(embeddings_path)
+    similarity_matrix = cosine_similarity(document_embeddings)
+
+    return similarity_matrix
+
+
+def get_most_similar_docs(
+    *,
+    original_docs: list[PlainTextSearchResult],
+    similarity_matrix: np.ndarray,
+    target_doc_index: int
+) -> list[tuple[PlainTextSearchResult, np.float32]]:
+    """
+    Returns a list of tuples containing the most similar documents and their similarity scores for a given target document index.
+    """
+    target_document_similarities = similarity_matrix[target_doc_index]
+
+    most_similar_indices_for_target_doc: list[tuple[int, np.float32]] = sorted(
+        enumerate(target_document_similarities), key=lambda pair: pair[1], reverse=True
+    )
+
+    return list(
+        map(
+            lambda int_sim: (original_docs[int_sim[0]], int_sim[1]),
+            most_similar_indices_for_target_doc,
+        )
+    )

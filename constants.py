@@ -46,3 +46,5 @@ BERTOPIC_RESULTS_PATH = f"{PROJECT_DIR}/output/bertopic_results.json"
 ANNOTATED_DATA_DIR = f"{PROJECT_DIR}/annotated/"
 
 ABOUT_FOOD_CLASSIFICATION_RESULTS_PATH = f"{PROJECT_DIR}/output/about_food.json"
+
+DOCUMENT_EMBEDDINGS_PATH = f"{PROJECT_DIR}/output/document_embeddings.npy"
