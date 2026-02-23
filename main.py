@@ -27,6 +27,7 @@ from constants import (
     ABOUT_FOOD_CLASSIFICATION_RESULTS_PATH,
     ARTICLE_TOPIC_CLASSIFICATION_RESULTS_PATH,
     BERTOPIC_RESULTS_PATH,
+    DOCUMENT_EMBEDDINGS_PATH,
     DOTENV_PATH,
     PROJECT_DIR,
 )
@@ -50,6 +51,8 @@ from delpher_types import (
 )
 from embeddings import (
     compute_document_similarity,
+    compute_document_similarity_from_embeddings,
+    get_most_similar_docs,
     get_most_similar_sentence_transformer_documents,
     get_most_similar_word_embedding_words,
     train_fasttext_model,
@@ -113,9 +116,21 @@ def main() -> None:
         plain_text_search_results
     )
 
-    document_similarity = compute_document_similarity(
-        [x.plain_text for x in plain_text_search_results_without_ads]
+    document_similarity = time_function(
+        compute_document_similarity,
+        [x.plain_text for x in plain_text_search_results_without_ads],
     )
+    # document_similarity = compute_document_similarity_from_embeddings(
+    #     DOCUMENT_EMBEDDINGS_PATH
+    # )
+
+    most_similar_docs = get_most_similar_docs(
+        original_docs=plain_text_search_results_without_ads,
+        similarity_matrix=document_similarity,
+        target_doc_index=3,
+    )
+
+    ...
     # is_aboutfood_results = classify_about_food(plain_text_search_results_without_ads)
     # save_about_food_results(is_about_food_results)
 
@@ -133,14 +148,14 @@ def main() -> None:
 def sentiment_analysis(texts: list[PlainTextSearchResult]):
     logging.info("Analyzing sentiments with RobBERT")
     sentiment_results_robbert = analyze_sentiments_robbert(texts)
-    logging.info("Analyzing sentiments with fietje")
-    sentiment_results_fietje = analyze_sentiments_dutch_fietje(texts)
-    logging.info("Analyzing sentiments with ollama")
-    sentiment_results_ollama = analyze_sentiments_dutch_ollama(texts)
+    # logging.info("Analyzing sentiments with fietje")
+    # sentiment_results_fietje = analyze_sentiments_dutch_fietje(texts)
+    # logging.info("Analyzing sentiments with ollama")
+    # sentiment_results_ollama = analyze_sentiments_dutch_ollama(texts)
 
     robbert_dict = [asdict(r) for r in sentiment_results_robbert]
-    fietje_dict = [asdict(r) for r in sentiment_results_fietje]
-    ollama_dict = [asdict(r) for r in sentiment_results_ollama]
+    # fietje_dict = [asdict(r) for r in sentiment_results_fietje]
+    # ollama_dict = [asdict(r) for r in sentiment_results_ollama]
 
     robbert_path = "output/robbert_sentiment.json"
     fietje_path = "output/fietje_sentiment.json"
@@ -152,11 +167,11 @@ def sentiment_analysis(texts: list[PlainTextSearchResult]):
             robbert_dict, f, ensure_ascii=False, indent=2, default=enum_serializer
         )
 
-    with open(fietje_path, "w", encoding="utf-8") as f:
-        json.dump(fietje_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
+    # with open(fietje_path, "w", encoding="utf-8") as f:
+    #     json.dump(fietje_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
-    with open(ollama_path, "w", encoding="utf-8") as f:
-        json.dump(ollama_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
+    # with open(ollama_path, "w", encoding="utf-8") as f:
+    #     json.dump(ollama_dict, f, ensure_ascii=False, indent=2, default=enum_serializer)
 
     ...
 
