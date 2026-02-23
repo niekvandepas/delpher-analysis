@@ -92,6 +92,7 @@ def main() -> None:
 
     with open(SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH, "r", encoding="utf-8") as f:
         plain_text_search_results = [PlainTextSearchResult(**json.loads(line)) for line in f]
+
     logging.info("Importing search results done")
 
 
