@@ -1,6 +1,7 @@
 import json
 import os
 import sys
+import time
 import xml.etree.ElementTree as ET
 from datetime import datetime
 from pathlib import Path
@@ -155,6 +156,9 @@ indo_terms = [
 
 def fetch_search_results(search_query: SearchQuery) -> bytes:
     query_params = build_query_params(search_query)
+    query_params["query"] = (
+        '(date within "2000-01-01 2026-01-01")'  # HACK: this seems to work for returning all results in a given period
+    )
     response = requests.get(BASE_URL, params=query_params)
     response.raise_for_status()
     return response.content
@@ -291,7 +295,7 @@ def fetch_paginated_search_results_stream(
         # Save offset after each batch
         offset_file.write_text(str(offset))
         offset += search_query.maximum_records
-        # time.sleep(5)
+        time.sleep(0.5)
 
 
 def write_results_stream(search_results_iter, output_file: Path):
@@ -333,11 +337,13 @@ def main():
     os.makedirs("data", exist_ok=True)
 
     indo_and_food_query_text = build_boolean_query(indo_terms, food_keywords)
+    food_terms_query_text = " OR ".join(f'"{word}"' for word in food_keywords)
 
-    print("Constructed Query:", indo_and_food_query_text)
+    print("Constructed Query:", food_terms_query_text)
 
     search_query = SearchQuery(
-        search_text=indo_and_food_query_text,
+        search_text=food_terms_query_text,
+        # search_text='("recept" OR "eten" OR "nootmuskaat" OR "rijsttafel" OR "toko" OR "keuken" OR "kost" OR "maaltijd" OR "spijs" OR "recept" OR "recepten" OR "café" OR "cafe" OR "restaurant" OR "toko" OR "eten" OR "specerijen" OR "ingrediënten" OR "kruiden" OR "voedsel" OR "keuken" OR "culinair" OR "koken" OR "kok" OR "snackbar" OR "diner" OR "avondeten")',
         # start_date="1940-01-01",
         start_date="2000-01-01",
         # end_date="1945-12-31",
@@ -372,9 +378,11 @@ def main():
     # print("Exiting without fetching documents.")
     # sys.exit(0)
 
+    query_name = "blank_search_results_after_2000"
+
     # Keep track of the offset so we can stop and resume this script at will without starting over
     offset_file = Path(
-        f"offsets/indo_and_food_terms_query_{search_query.start_date}_{search_query.end_date}_offset.txt"
+        f"offsets/{query_name}_{search_query.start_date}_{search_query.end_date}_offset.txt"
     )
 
     results_stream = fetch_paginated_search_results_stream(
@@ -382,7 +390,7 @@ def main():
     )
 
     search_results_file_name = Path(
-        f"search_results/indo_and_food_terms_query_{search_query.start_date}_{search_query.end_date}_search_results.ndjson"
+        f"search_results/{query_name}_{search_query.start_date}_{search_query.end_date}_search_results.ndjson"
     )
     write_results_stream(results_stream, output_file=search_results_file_name)
 
