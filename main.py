@@ -36,6 +36,7 @@ from data_import import (
     import_search_results,
     import_search_results_ndjson,
     normalize_unicode,
+    find_matching_documents,
     remove_advertisements,
     strip_xml_tags,
 )
@@ -105,10 +106,15 @@ def main() -> None:
         DOCUMENT_EMBEDDINGS_PATH
     )
 
+    seed_docs = find_matching_documents(
+        plain_text_search_results_without_ads,
+        ["eten", "identiteit", "nederlands", "erfgoed", "lekker"],
+    )
+
     most_similar_docs = get_most_similar_docs(
         original_docs=plain_text_search_results_without_ads,
         similarity_matrix=document_similarity,
-        target_doc_index=3,
+        target_doc_index=7,
     )
 
     ...

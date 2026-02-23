@@ -213,3 +213,16 @@ def preprocess_plain_texts(
         plain_text_search_results.append(search_result_with_plain_text)
 
     return plain_text_search_results
+
+
+def find_matching_documents(
+    docs: list[PlainTextSearchResult], queries: list[str]
+) -> list[tuple[int, PlainTextSearchResult]]:
+    """
+    Returns a list of documents that contain all of the query strings (case-insensitive). Each document is returned as a tuple containing the index of the document in the input list and the document itself.
+    """
+    return [
+        (i, doc)
+        for i, doc in enumerate(docs)
+        if all(query.lower() in doc.plain_text.lower() for query in queries)
+    ]
