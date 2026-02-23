@@ -18,3 +18,6 @@ __pycache__
 .vscode
 
 Delpher\ API\ documentation/
+
+# This file is too large for Github, so a zipped version is pushed instead
+blank_search_results_after_2000_2000-01-01_2026-01-01_search_results.ndjson
