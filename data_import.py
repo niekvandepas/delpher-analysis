@@ -1,6 +1,7 @@
 from dataclasses import asdict
 import html
 import json
+import logging
 import os
 import re
 import unicodedata
@@ -184,3 +185,24 @@ def remove_advertisements(search_results: list[PlainTextSearchResult]) -> list[P
             search_results_without_ads.append(search_result)
 
     return search_results_without_ads
+
+def preprocess_plain_texts(search_results: list[OcredSearchResult]) -> list[PlainTextSearchResult]:
+    plain_text_search_results: list[PlainTextSearchResult] = []
+
+    for i, search_result in enumerate(search_results):
+        logging.info(f"Processing search result #{i+1}")
+        plain_text = normalize_unicode(strip_xml_tags(search_result.ocr_xml))
+        search_result_with_plain_text = PlainTextSearchResult(
+            publication_date=search_result.publication_date,
+            title=search_result.title,
+            ocr_url=search_result.ocr_url,
+            paper_title=search_result.paper_title,
+            spatial_creation=search_result.spatial_creation,
+            identifier=search_result.identifier,
+            ocr_xml=search_result.ocr_xml,
+            plain_text=plain_text,
+        )
+
+        plain_text_search_results.append(search_result_with_plain_text)
+
+    return plain_text_search_results

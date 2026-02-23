@@ -30,6 +30,7 @@ from constants import (
     DOCUMENT_EMBEDDINGS_PATH,
     DOTENV_PATH,
     PROJECT_DIR,
+    SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH,
 )
 from data_import import (
     import_search_results,
@@ -88,41 +89,23 @@ def main() -> None:
         DATA_IMPORT_LIMIT = int(DATA_IMPORT_LIMIT)
 
     logging.info("Importing search results")
-    search_results = import_search_results_ndjson(
-        limit=DATA_IMPORT_LIMIT,
-        path="data/dutch_and_food_terms_query_with_plain_texts.ndjson",
-    )
+
+    with open(SEARCH_RESULTS_WITH_PLAIN_TEXTS_FILE_PATH, "r", encoding="utf-8") as f:
+        plain_text_search_results = [PlainTextSearchResult(**json.loads(line)) for line in f]
     logging.info("Importing search results done")
 
-    plain_text_search_results: list[PlainTextSearchResult] = []
-
-    for i, search_result in enumerate(search_results):
-        logging.info(f"Processing search result #{i+1}")
-        plain_text = normalize_unicode(strip_xml_tags(search_result.ocr_xml))
-        search_result_with_plain_text = PlainTextSearchResult(
-            publication_date=search_result.publication_date,
-            title=search_result.title,
-            ocr_url=search_result.ocr_url,
-            paper_title=search_result.paper_title,
-            spatial_creation=search_result.spatial_creation,
-            identifier=search_result.identifier,
-            ocr_xml=search_result.ocr_xml,
-            plain_text=plain_text,
-        )
-
-        plain_text_search_results.append(search_result_with_plain_text)
 
     plain_text_search_results_without_ads = remove_advertisements(
         plain_text_search_results
     )
 
-    document_similarity = time_function(
-        compute_document_similarity,
-        [x.plain_text for x in plain_text_search_results_without_ads],
-    )
-    # document_similarity = compute_document_similarity_from_embeddings(
-    #     DOCUMENT_EMBEDDINGS_PATH
+    # document_similarity = time_function(
+    #     compute_document_similarity,
+    #     [x.plain_text for x in plain_text_search_results_without_ads],
     # )
+    document_similarity = compute_document_similarity_from_embeddings(
+        DOCUMENT_EMBEDDINGS_PATH
+    )
 
     most_similar_docs = get_most_similar_docs(
         original_docs=plain_text_search_results_without_ads,
