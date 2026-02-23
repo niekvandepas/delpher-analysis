@@ -131,7 +131,9 @@ def compute_document_embeddings(docs: list[str]) -> np.ndarray:
 
     # Split each document into sentences and then average the vectors, in order to overcome 128-token limit
     # https://link.springer.com/article/10.1007/s11227-025-07414-4
-    for doc in docs:
+    num_docs = len(docs)
+    for i, doc in enumerate(docs):
+        print(f"Computing embeddings for document {i + 1}/{num_docs}")
         sentences = sentence_tokenizer.tokenize(doc)
 
         sentence_embeddings: np.ndarray = model.encode(sentences)  # type: ignore
