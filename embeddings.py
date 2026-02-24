@@ -163,7 +163,7 @@ def get_most_similar_docs(
     *,
     original_docs: list[PlainTextSearchResult],
     similarity_matrix: np.ndarray,
-    target_doc_index: int
+    target_doc_index: int,
 ) -> list[tuple[PlainTextSearchResult, np.float32]]:
     """
     Returns a list of tuples containing the most similar documents and their similarity scores for a given target document index.
