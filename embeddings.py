@@ -180,3 +180,17 @@ def get_most_similar_docs(
             most_similar_indices_for_target_doc,
         )
     )
+
+
+def similar_docs_to_string(
+    similar_docs: list[tuple[PlainTextSearchResult, np.float32]], n=100
+) -> str:
+    result = ""
+
+    for r, score in similar_docs[:100]:
+        result += str(score)
+        result += "\n"
+        result += r.plain_text
+        result += "\n\n"
+
+    return result

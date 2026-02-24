@@ -5,6 +5,8 @@ import logging
 import os
 import sys
 
+import pyperclip
+
 from classification.about_food_classifier import classify_about_food
 
 logging.basicConfig(level=logging.INFO, format="%(levelname)s: %(message)s")
@@ -57,6 +59,7 @@ from embeddings import (
     get_most_similar_docs,
     get_most_similar_sentence_transformer_documents,
     get_most_similar_word_embedding_words,
+    similar_docs_to_string,
     train_fasttext_model,
     train_sentence_transformer_model,
     train_word2vec_model,
@@ -118,6 +121,10 @@ def main() -> None:
     )
 
     ...
+
+    formatted_docs = similar_docs_to_string(most_similar_docs)
+
+    pyperclip.copy(formatted_docs)
 
     # is_aboutfood_results = classify_about_food(plain_text_search_results_without_ads)
     # save_about_food_results(is_about_food_results)
