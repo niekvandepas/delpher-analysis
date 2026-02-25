@@ -182,15 +182,31 @@ def get_most_similar_docs(
     )
 
 
-def similar_docs_to_string(
+def similar_docs_to_markdown(
     similar_docs: list[tuple[PlainTextSearchResult, np.float32]], n=100
 ) -> str:
     result = ""
 
-    for r, score in similar_docs[:n]:
-        result += str(score)
+    for doc, score in similar_docs[:n]:
+        result += f"<article>\n"
+        result += f"    <dl>\n"
+        result += f"        <dt>Identifier</dt>\n"
+        result += f"        <dd>{doc.identifier}</dd>\n"
+        result += f"        <dt>Similarity score:</dt>\n"
+        result += f"        <dd>{score}</dd>\n"
+        result += f"        <dt>Title</dt>\n"
+        result += f"        <dd>{doc.title}</dd>\n"
+        result += f"        <dt>Paper title</dt>\n"
+        result += f"        <dd>{doc.paper_title}</dd>\n"
+        result += f"        <dt>Publication Date</dt>\n"
+        result += f"        <dd>{doc.publication_date}</dd>\n"
+        result += f"        <dt>Location</dt>\n"
+        result += f"        <dd>{doc.spatial_creation}</dd>\n"
+        result += "    </dl>\n"
+        result += "    <p>\n"
+        result += f"        {doc.plain_text}\n"
+        result += "    </p>\n"
+        result += "</article>\n"
         result += "\n"
-        result += r.plain_text
-        result += "\n\n"
 
     return result

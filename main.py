@@ -59,7 +59,7 @@ from embeddings import (
     get_most_similar_docs,
     get_most_similar_sentence_transformer_documents,
     get_most_similar_word_embedding_words,
-    similar_docs_to_string,
+    similar_docs_to_markdown,
     train_fasttext_model,
     train_sentence_transformer_model,
     train_word2vec_model,
@@ -122,7 +122,7 @@ def main() -> None:
 
     ...
 
-    formatted_docs = similar_docs_to_string(most_similar_docs)
+    formatted_docs = similar_docs_to_markdown(most_similar_docs, n=10)
 
     pyperclip.copy(formatted_docs)
 
