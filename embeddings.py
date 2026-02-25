@@ -187,7 +187,7 @@ def similar_docs_to_string(
 ) -> str:
     result = ""
 
-    for r, score in similar_docs[:100]:
+    for r, score in similar_docs[:n]:
         result += str(score)
         result += "\n"
         result += r.plain_text
